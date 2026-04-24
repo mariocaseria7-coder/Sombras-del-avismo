@@ -1,5 +1,6 @@
 package com.sombrasdelavismo;
 
+import javax.imageio.ImageIO;
 import javax.swing.BorderFactory;
 import javax.swing.Box;
 import javax.swing.BoxLayout;
@@ -10,6 +11,7 @@ import javax.swing.JLabel;
 import javax.swing.JPanel;
 import javax.swing.JScrollPane;
 import javax.swing.JTabbedPane;
+import javax.swing.JTextArea;
 import javax.swing.SwingConstants;
 import javax.swing.SwingUtilities;
 import javax.swing.UIManager;
@@ -26,6 +28,8 @@ import java.awt.GridLayout;
 import java.awt.Image;
 import java.awt.Insets;
 import java.awt.RenderingHints;
+import java.awt.image.BufferedImage;
+import java.io.IOException;
 import java.net.URL;
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -77,43 +81,50 @@ public class Main extends JFrame {
             "createcard urbano.jpg"
     );
 
-    private final Game game;
-    private final List<Card> collection;
+    private Game game;
+    private List<Card> collection;
     private Card selectedCard;
 
-    private final JLabel titleStatusLabel = new JLabel();
-    private final JLabel turnLabel = new JLabel();
-    private final JLabel currentPlayerLabel = new JLabel();
-    private final JLabel opponentLabel = new JLabel();
-    private final JLabel deckLabel = new JLabel();
-    private final JLabel hintLabel = new JLabel();
-    private final JLabel selectedImageLabel = new JLabel();
-    private final JLabel selectedNameLabel = new JLabel();
-    private final JLabel selectedMetaLabel = new JLabel();
-    private final JLabel selectedDescriptionLabel = new JLabel();
-    private final JPanel handPanel = new JPanel(new FlowLayout(FlowLayout.LEFT, 16, 16));
-    private final JPanel collectionPanel = new JPanel(new FlowLayout(FlowLayout.LEFT, 16, 16));
+    private final JLabel statusLabel = new JLabel();
+    private final JLabel currentTurnLabel = new JLabel();
+    private final JLabel opponentStatsLabel = new JLabel();
+    private final JLabel currentStatsLabel = new JLabel();
+    private final JLabel opponentBoardLabel = new JLabel();
+    private final JLabel currentBoardLabel = new JLabel();
+    private final JLabel previewNameLabel = new JLabel();
+    private final JLabel previewMetaLabel = new JLabel();
+    private final JLabel previewImageLabel = new JLabel();
+    private final JLabel previewHintLabel = new JLabel();
+    private final JTextArea logArea = new JTextArea();
+    private final JPanel opponentBoardPanel = new JPanel(new FlowLayout(FlowLayout.LEFT, 12, 12));
+    private final JPanel playerBoardPanel = new JPanel(new FlowLayout(FlowLayout.LEFT, 12, 12));
+    private final JPanel handPanel = new JPanel(new FlowLayout(FlowLayout.LEFT, 12, 12));
+    private final JPanel collectionPanel = new JPanel(new FlowLayout(FlowLayout.LEFT, 12, 12));
+    private final JButton playButton = new JButton("Jugar carta");
+    private final JButton attackButton = new JButton("Atacar con criatura");
+    private final JButton endTurnButton = new JButton("Finalizar turno");
 
     public Main() {
-        collection = buildCollection();
+        startNewGame();
+        configureWindow();
+        buildInterface();
+        refreshUi(game.getLastAction());
+    }
 
+    private void startNewGame() {
+        collection = buildCollection();
         Player player1 = new Player("Jugador 1");
         Player player2 = new Player("Jugador 2");
         dealCards(player1, player2, collection);
-
         game = new Game(player1, player2);
         game.startGame();
-        selectedCard = game.getCurrentPlayer().getHand().get(0);
-
-        configureWindow();
-        buildInterface();
-        refreshUi(selectedCard);
+        selectedCard = game.getCurrentPlayer().getHand().isEmpty() ? null : game.getCurrentPlayer().getHand().get(0);
     }
 
     private void configureWindow() {
-        setTitle("Sombras del Abismo");
-        setSize(1480, 920);
-        setMinimumSize(new Dimension(1200, 780));
+        setTitle("Sombras del Avismo");
+        setSize(1540, 960);
+        setMinimumSize(new Dimension(1280, 820));
         setLocationRelativeTo(null);
         setDefaultCloseOperation(EXIT_ON_CLOSE);
         setContentPane(new GradientPanel());
@@ -125,192 +136,267 @@ public class Main extends JFrame {
         root.setBorder(BorderFactory.createEmptyBorder(18, 18, 18, 18));
 
         root.add(buildHeader(), BorderLayout.NORTH);
-        root.add(buildMainArea(), BorderLayout.CENTER);
-        root.add(buildBottomTabs(), BorderLayout.SOUTH);
+        root.add(buildBoardSection(), BorderLayout.CENTER);
+        root.add(buildBottomSection(), BorderLayout.SOUTH);
     }
 
     private JPanel buildHeader() {
-        JPanel panel = createPanel(new BorderLayout(14, 0), new Color(10, 17, 29, 225));
-        panel.setBorder(BorderFactory.createCompoundBorder(
-                BorderFactory.createLineBorder(new Color(210, 179, 80, 90), 1, true),
-                BorderFactory.createEmptyBorder(16, 22, 16, 22)
+        JPanel header = createPanel(new BorderLayout(12, 12), new Color(8, 16, 28, 230));
+        header.setBorder(BorderFactory.createCompoundBorder(
+                BorderFactory.createLineBorder(new Color(244, 194, 98, 80), 1, true),
+                BorderFactory.createEmptyBorder(18, 22, 18, 22)
         ));
-
-        JLabel title = new JLabel("Sombras del Abismo");
-        title.setForeground(new Color(244, 232, 203));
-        title.setFont(new Font("Palatino Linotype", Font.BOLD, 32));
-
-        JLabel subtitle = new JLabel("Selecciona una carta desde tu mano o desde la coleccion inferior");
-        subtitle.setForeground(new Color(194, 207, 219));
-        subtitle.setFont(new Font("SansSerif", Font.PLAIN, 15));
 
         JPanel left = new JPanel();
         left.setOpaque(false);
         left.setLayout(new BoxLayout(left, BoxLayout.Y_AXIS));
+
+        JLabel title = new JLabel("Sombras del Avismo");
+        title.setForeground(new Color(245, 232, 202));
+        title.setFont(new Font("Palatino Linotype", Font.BOLD, 34));
+
+        JLabel subtitle = new JLabel("Juego de cartas funcional con tablero, mano, ataques y hechizos");
+        subtitle.setForeground(new Color(188, 205, 220));
+        subtitle.setFont(new Font("SansSerif", Font.PLAIN, 15));
+
         left.add(title);
-        left.add(Box.createVerticalStrut(4));
+        left.add(Box.createVerticalStrut(5));
         left.add(subtitle);
 
-        titleStatusLabel.setForeground(new Color(255, 217, 130));
-        titleStatusLabel.setFont(new Font("SansSerif", Font.BOLD, 15));
-        titleStatusLabel.setHorizontalAlignment(SwingConstants.RIGHT);
+        statusLabel.setForeground(new Color(255, 220, 138));
+        statusLabel.setFont(new Font("SansSerif", Font.BOLD, 15));
+        statusLabel.setHorizontalAlignment(SwingConstants.RIGHT);
 
-        panel.add(left, BorderLayout.WEST);
-        panel.add(titleStatusLabel, BorderLayout.EAST);
-        return panel;
+        header.add(left, BorderLayout.WEST);
+        header.add(statusLabel, BorderLayout.EAST);
+        return header;
     }
 
-    private JPanel buildMainArea() {
-        JPanel panel = new JPanel(new BorderLayout(18, 18));
-        panel.setOpaque(false);
-        panel.add(buildSidebar(), BorderLayout.WEST);
-        panel.add(buildCardDetail(), BorderLayout.CENTER);
-        return panel;
+    private JPanel buildBoardSection() {
+        JPanel section = new JPanel(new BorderLayout(18, 18));
+        section.setOpaque(false);
+        section.add(buildArena(), BorderLayout.CENTER);
+        section.add(buildSidePanel(), BorderLayout.EAST);
+        return section;
     }
 
-    private JPanel buildSidebar() {
-        JPanel sidebar = createPanel(new BorderLayout(0, 16), new Color(10, 23, 38, 215));
-        sidebar.setPreferredSize(new Dimension(300, 0));
-        sidebar.setBorder(BorderFactory.createCompoundBorder(
-                BorderFactory.createLineBorder(new Color(100, 129, 158, 90), 1, true),
+    private JPanel buildArena() {
+        JPanel arena = new JPanel(new GridLayout(3, 1, 0, 16));
+        arena.setOpaque(false);
+        arena.add(buildPlayerZone(false));
+        arena.add(buildCenterStrip());
+        arena.add(buildPlayerZone(true));
+        return arena;
+    }
+
+    private JPanel buildPlayerZone(boolean currentPlayerZone) {
+        JPanel zone = createPanel(new BorderLayout(12, 12),
+                currentPlayerZone ? new Color(12, 26, 42, 220) : new Color(24, 18, 12, 220));
+        zone.setBorder(BorderFactory.createCompoundBorder(
+                BorderFactory.createLineBorder(currentPlayerZone ? new Color(95, 140, 182, 80) : new Color(217, 180, 92, 80), 1, true),
+                BorderFactory.createEmptyBorder(16, 16, 16, 16)
+        ));
+
+        JLabel nameLabel = new JLabel(currentPlayerZone ? "Tu mesa" : "Mesa rival");
+        nameLabel.setFont(new Font("Palatino Linotype", Font.BOLD, 24));
+        nameLabel.setForeground(new Color(245, 233, 205));
+
+        JLabel statsLabel = currentPlayerZone ? currentStatsLabel : opponentStatsLabel;
+        JLabel boardLabel = currentPlayerZone ? currentBoardLabel : opponentBoardLabel;
+
+        statsLabel.setFont(new Font("SansSerif", Font.PLAIN, 15));
+        statsLabel.setForeground(new Color(227, 235, 245));
+        boardLabel.setFont(new Font("SansSerif", Font.PLAIN, 14));
+        boardLabel.setForeground(new Color(189, 204, 219));
+
+        JPanel top = new JPanel(new BorderLayout());
+        top.setOpaque(false);
+        top.add(nameLabel, BorderLayout.WEST);
+
+        JPanel right = new JPanel();
+        right.setOpaque(false);
+        right.setLayout(new BoxLayout(right, BoxLayout.Y_AXIS));
+        right.add(statsLabel);
+        right.add(Box.createVerticalStrut(4));
+        right.add(boardLabel);
+        top.add(right, BorderLayout.EAST);
+
+        JPanel cardsPanel = currentPlayerZone ? playerBoardPanel : opponentBoardPanel;
+        cardsPanel.setOpaque(false);
+
+        JScrollPane scrollPane = new JScrollPane(cardsPanel);
+        styleScrollPane(scrollPane);
+        scrollPane.setBorder(BorderFactory.createEmptyBorder());
+
+        zone.add(top, BorderLayout.NORTH);
+        zone.add(scrollPane, BorderLayout.CENTER);
+        return zone;
+    }
+
+    private JPanel buildCenterStrip() {
+        JPanel strip = createPanel(new BorderLayout(16, 16), new Color(13, 12, 18, 205));
+        strip.setBorder(BorderFactory.createCompoundBorder(
+                BorderFactory.createLineBorder(new Color(126, 120, 134, 60), 1, true),
                 BorderFactory.createEmptyBorder(18, 18, 18, 18)
         ));
 
-        JLabel panelTitle = new JLabel("Panel de partida");
-        panelTitle.setForeground(new Color(241, 232, 206));
-        panelTitle.setFont(new Font("Palatino Linotype", Font.BOLD, 24));
+        JPanel turnPanel = new JPanel();
+        turnPanel.setOpaque(false);
+        turnPanel.setLayout(new BoxLayout(turnPanel, BoxLayout.Y_AXIS));
 
-        turnLabel.setFont(new Font("SansSerif", Font.BOLD, 17));
-        turnLabel.setForeground(new Color(255, 218, 129));
-        currentPlayerLabel.setFont(new Font("SansSerif", Font.PLAIN, 15));
-        currentPlayerLabel.setForeground(new Color(229, 236, 245));
-        opponentLabel.setFont(new Font("SansSerif", Font.PLAIN, 15));
-        opponentLabel.setForeground(new Color(205, 214, 224));
-        deckLabel.setFont(new Font("SansSerif", Font.PLAIN, 15));
-        deckLabel.setForeground(new Color(205, 214, 224));
+        JLabel title = new JLabel("Zona de combate");
+        title.setForeground(new Color(241, 231, 206));
+        title.setFont(new Font("Palatino Linotype", Font.BOLD, 28));
 
-        JPanel infoPanel = new JPanel();
-        infoPanel.setOpaque(false);
-        infoPanel.setLayout(new BoxLayout(infoPanel, BoxLayout.Y_AXIS));
-        infoPanel.add(panelTitle);
-        infoPanel.add(Box.createVerticalStrut(18));
-        infoPanel.add(createInfoCard("Turno", turnLabel));
-        infoPanel.add(Box.createVerticalStrut(12));
-        infoPanel.add(createInfoCard("Jugador actual", currentPlayerLabel));
-        infoPanel.add(Box.createVerticalStrut(12));
-        infoPanel.add(createInfoCard("Rival", opponentLabel));
-        infoPanel.add(Box.createVerticalStrut(12));
-        infoPanel.add(createInfoCard("Mazo", deckLabel));
+        currentTurnLabel.setForeground(new Color(255, 215, 120));
+        currentTurnLabel.setFont(new Font("SansSerif", Font.BOLD, 18));
 
-        JButton drawButton = createPrimaryButton("Robar carta");
-        drawButton.addActionListener(event -> {
-            int previousSize = game.getCurrentPlayer().getHand().size();
-            game.getCurrentPlayer().drawCard();
-            if (game.getCurrentPlayer().getHand().size() > previousSize) {
-                selectedCard = game.getCurrentPlayer().getHand().get(game.getCurrentPlayer().getHand().size() - 1);
-            }
-            refreshUi(selectedCard);
-        });
+        JLabel helper = new JLabel("<html><body style='width:500px'>Selecciona una carta en tu mano para jugarla. Si seleccionas una criatura de tu mesa que ya este lista, puedes atacar con ella directamente al rival.</body></html>");
+        helper.setForeground(new Color(194, 203, 216));
+        helper.setFont(new Font("SansSerif", Font.PLAIN, 15));
 
-        JButton nextTurnButton = createSecondaryButton("Pasar turno");
-        nextTurnButton.addActionListener(event -> {
-            game.nextTurn();
-            if (!game.getCurrentPlayer().getHand().isEmpty()) {
-                selectedCard = game.getCurrentPlayer().getHand().get(0);
-            }
-            refreshUi(selectedCard);
-        });
+        turnPanel.add(title);
+        turnPanel.add(Box.createVerticalStrut(8));
+        turnPanel.add(currentTurnLabel);
+        turnPanel.add(Box.createVerticalStrut(10));
+        turnPanel.add(helper);
 
-        hintLabel.setForeground(new Color(187, 200, 214));
-        hintLabel.setFont(new Font("SansSerif", Font.PLAIN, 14));
-        hintLabel.setVerticalAlignment(SwingConstants.TOP);
-
-        JPanel actionPanel = new JPanel();
+        JPanel actionPanel = new JPanel(new FlowLayout(FlowLayout.RIGHT, 12, 0));
         actionPanel.setOpaque(false);
-        actionPanel.setLayout(new BoxLayout(actionPanel, BoxLayout.Y_AXIS));
-        drawButton.setAlignmentX(Component.LEFT_ALIGNMENT);
-        nextTurnButton.setAlignmentX(Component.LEFT_ALIGNMENT);
-        hintLabel.setAlignmentX(Component.LEFT_ALIGNMENT);
-        actionPanel.add(drawButton);
-        actionPanel.add(Box.createVerticalStrut(10));
-        actionPanel.add(nextTurnButton);
-        actionPanel.add(Box.createVerticalStrut(18));
-        actionPanel.add(hintLabel);
 
-        sidebar.add(infoPanel, BorderLayout.NORTH);
-        sidebar.add(actionPanel, BorderLayout.SOUTH);
-        return sidebar;
+        stylePrimaryButton(playButton);
+        styleAccentButton(attackButton);
+        styleSecondaryButton(endTurnButton);
+
+        playButton.addActionListener(event -> handlePlayCard());
+        attackButton.addActionListener(event -> handleAttack());
+        endTurnButton.addActionListener(event -> handleEndTurn());
+
+        JButton newGameButton = new JButton("Nueva partida");
+        styleSecondaryButton(newGameButton);
+        newGameButton.addActionListener(event -> {
+            startNewGame();
+            refreshUi("Nueva partida iniciada.");
+        });
+
+        actionPanel.add(playButton);
+        actionPanel.add(attackButton);
+        actionPanel.add(endTurnButton);
+        actionPanel.add(newGameButton);
+
+        strip.add(turnPanel, BorderLayout.WEST);
+        strip.add(actionPanel, BorderLayout.EAST);
+        return strip;
     }
 
-    private JPanel buildCardDetail() {
-        JPanel detail = createPanel(new BorderLayout(16, 16), new Color(27, 18, 11, 220));
-        detail.setBorder(BorderFactory.createCompoundBorder(
-                BorderFactory.createLineBorder(new Color(224, 183, 88, 95), 1, true),
-                BorderFactory.createEmptyBorder(22, 22, 22, 22)
-        ));
-
-        JLabel detailTitle = new JLabel("Carta seleccionada");
-        detailTitle.setForeground(new Color(247, 233, 201));
-        detailTitle.setFont(new Font("Palatino Linotype", Font.BOLD, 28));
-
-        selectedImageLabel.setHorizontalAlignment(SwingConstants.CENTER);
-        selectedImageLabel.setVerticalAlignment(SwingConstants.CENTER);
-        selectedImageLabel.setPreferredSize(new Dimension(460, 470));
-        selectedImageLabel.setBorder(BorderFactory.createCompoundBorder(
-                BorderFactory.createLineBorder(new Color(255, 212, 110, 90), 1, true),
-                BorderFactory.createEmptyBorder(14, 14, 14, 14)
-        ));
-
-        selectedNameLabel.setForeground(new Color(255, 229, 175));
-        selectedNameLabel.setFont(new Font("Palatino Linotype", Font.BOLD, 30));
-        selectedMetaLabel.setForeground(new Color(231, 232, 238));
-        selectedMetaLabel.setFont(new Font("SansSerif", Font.BOLD, 16));
-        selectedDescriptionLabel.setForeground(new Color(222, 226, 232));
-        selectedDescriptionLabel.setFont(new Font("SansSerif", Font.PLAIN, 15));
-        selectedDescriptionLabel.setVerticalAlignment(SwingConstants.TOP);
-
-        JPanel textPanel = new JPanel();
-        textPanel.setOpaque(false);
-        textPanel.setLayout(new BoxLayout(textPanel, BoxLayout.Y_AXIS));
-        textPanel.add(selectedNameLabel);
-        textPanel.add(Box.createVerticalStrut(10));
-        textPanel.add(selectedMetaLabel);
-        textPanel.add(Box.createVerticalStrut(14));
-        textPanel.add(selectedDescriptionLabel);
-
-        detail.add(detailTitle, BorderLayout.NORTH);
-        detail.add(selectedImageLabel, BorderLayout.CENTER);
-        detail.add(textPanel, BorderLayout.SOUTH);
-        return detail;
+    private JPanel buildSidePanel() {
+        JPanel side = new JPanel(new BorderLayout(0, 16));
+        side.setOpaque(false);
+        side.setPreferredSize(new Dimension(390, 0));
+        side.add(buildPreviewPanel(), BorderLayout.CENTER);
+        side.add(buildLogPanel(), BorderLayout.SOUTH);
+        return side;
     }
 
-    private JTabbedPane buildBottomTabs() {
+    private JPanel buildPreviewPanel() {
+        JPanel preview = createPanel(new BorderLayout(12, 12), new Color(27, 17, 10, 220));
+        preview.setBorder(BorderFactory.createCompoundBorder(
+                BorderFactory.createLineBorder(new Color(223, 181, 89, 80), 1, true),
+                BorderFactory.createEmptyBorder(18, 18, 18, 18)
+        ));
+
+        JLabel title = new JLabel("Carta seleccionada");
+        title.setForeground(new Color(246, 232, 201));
+        title.setFont(new Font("Palatino Linotype", Font.BOLD, 26));
+
+        previewImageLabel.setHorizontalAlignment(SwingConstants.CENTER);
+        previewImageLabel.setVerticalAlignment(SwingConstants.CENTER);
+        previewImageLabel.setPreferredSize(new Dimension(320, 430));
+        previewImageLabel.setBorder(BorderFactory.createCompoundBorder(
+                BorderFactory.createLineBorder(new Color(255, 212, 110, 60), 1, true),
+                BorderFactory.createEmptyBorder(10, 10, 10, 10)
+        ));
+
+        previewNameLabel.setForeground(new Color(255, 230, 180));
+        previewNameLabel.setFont(new Font("Palatino Linotype", Font.BOLD, 27));
+
+        previewMetaLabel.setForeground(new Color(230, 234, 240));
+        previewMetaLabel.setFont(new Font("SansSerif", Font.BOLD, 15));
+
+        previewHintLabel.setForeground(new Color(202, 210, 220));
+        previewHintLabel.setFont(new Font("SansSerif", Font.PLAIN, 14));
+        previewHintLabel.setVerticalAlignment(SwingConstants.TOP);
+
+        JPanel info = new JPanel();
+        info.setOpaque(false);
+        info.setLayout(new BoxLayout(info, BoxLayout.Y_AXIS));
+        info.add(previewNameLabel);
+        info.add(Box.createVerticalStrut(8));
+        info.add(previewMetaLabel);
+        info.add(Box.createVerticalStrut(12));
+        info.add(previewHintLabel);
+
+        preview.add(title, BorderLayout.NORTH);
+        preview.add(previewImageLabel, BorderLayout.CENTER);
+        preview.add(info, BorderLayout.SOUTH);
+        return preview;
+    }
+
+    private JPanel buildLogPanel() {
+        JPanel logPanel = createPanel(new BorderLayout(10, 10), new Color(9, 14, 24, 225));
+        logPanel.setBorder(BorderFactory.createCompoundBorder(
+                BorderFactory.createLineBorder(new Color(95, 129, 160, 70), 1, true),
+                BorderFactory.createEmptyBorder(16, 16, 16, 16)
+        ));
+        logPanel.setPreferredSize(new Dimension(0, 220));
+
+        JLabel title = new JLabel("Registro de partida");
+        title.setForeground(new Color(238, 228, 200));
+        title.setFont(new Font("Palatino Linotype", Font.BOLD, 22));
+
+        logArea.setEditable(false);
+        logArea.setLineWrap(true);
+        logArea.setWrapStyleWord(true);
+        logArea.setBackground(new Color(5, 10, 18));
+        logArea.setForeground(new Color(212, 220, 230));
+        logArea.setCaretColor(new Color(212, 220, 230));
+        logArea.setFont(new Font("SansSerif", Font.PLAIN, 14));
+        logArea.setBorder(BorderFactory.createEmptyBorder(10, 10, 10, 10));
+
+        JScrollPane scrollPane = new JScrollPane(logArea);
+        styleScrollPane(scrollPane);
+
+        logPanel.add(title, BorderLayout.NORTH);
+        logPanel.add(scrollPane, BorderLayout.CENTER);
+        return logPanel;
+    }
+
+    private JTabbedPane buildBottomSection() {
         JTabbedPane tabs = new JTabbedPane();
         tabs.setFont(new Font("SansSerif", Font.BOLD, 14));
-        tabs.setBackground(new Color(10, 18, 28));
-        tabs.addTab("Tu mano", buildHandTab());
-        tabs.addTab("Coleccion completa", buildCollectionTab());
+        tabs.addTab("Mano actual", buildHandTab());
+        tabs.addTab("Coleccion", buildCollectionTab());
         return tabs;
     }
 
     private JScrollPane buildHandTab() {
-        handPanel.setOpaque(false);
-
-        JPanel wrapper = createPanel(new BorderLayout(0, 10), new Color(8, 14, 24, 225));
+        JPanel wrapper = createPanel(new BorderLayout(10, 10), new Color(8, 14, 24, 220));
         wrapper.setBorder(BorderFactory.createEmptyBorder(14, 14, 14, 14));
 
-        JLabel title = new JLabel("Tus cartas disponibles");
-        title.setForeground(new Color(238, 229, 201));
+        JLabel title = new JLabel("Tu mano");
+        title.setForeground(new Color(239, 229, 201));
         title.setFont(new Font("Palatino Linotype", Font.BOLD, 22));
 
-        JLabel text = new JLabel("Haz clic en cualquier carta para verla en grande.");
-        text.setForeground(new Color(194, 205, 219));
-        text.setFont(new Font("SansSerif", Font.PLAIN, 14));
+        JLabel help = new JLabel("Elige una carta y usa el boton superior para jugarla.");
+        help.setForeground(new Color(193, 204, 217));
+        help.setFont(new Font("SansSerif", Font.PLAIN, 14));
 
         JPanel header = new JPanel(new GridLayout(2, 1));
         header.setOpaque(false);
         header.add(title);
-        header.add(text);
+        header.add(help);
+
+        handPanel.setOpaque(false);
 
         wrapper.add(header, BorderLayout.NORTH);
         wrapper.add(handPanel, BorderLayout.CENTER);
@@ -322,27 +408,23 @@ public class Main extends JFrame {
     }
 
     private JScrollPane buildCollectionTab() {
-        collectionPanel.setOpaque(false);
-
-        JPanel wrapper = createPanel(new BorderLayout(0, 10), new Color(8, 14, 24, 225));
+        JPanel wrapper = createPanel(new BorderLayout(10, 10), new Color(8, 14, 24, 220));
         wrapper.setBorder(BorderFactory.createEmptyBorder(14, 14, 14, 14));
 
-        JLabel title = new JLabel("Todos los personajes");
-        title.setForeground(new Color(238, 229, 201));
+        JLabel title = new JLabel("Coleccion completa");
+        title.setForeground(new Color(239, 229, 201));
         title.setFont(new Font("Palatino Linotype", Font.BOLD, 22));
 
-        JLabel text = new JLabel("Usa esta galeria para localizar cualquier carta del zip.");
-        text.setForeground(new Color(194, 205, 219));
-        text.setFont(new Font("SansSerif", Font.PLAIN, 14));
+        JLabel help = new JLabel("Puedes revisar aqui todas las cartas que se cargaron desde el zip.");
+        help.setForeground(new Color(193, 204, 217));
+        help.setFont(new Font("SansSerif", Font.PLAIN, 14));
 
         JPanel header = new JPanel(new GridLayout(2, 1));
         header.setOpaque(false);
         header.add(title);
-        header.add(text);
+        header.add(help);
 
-        for (Card card : collection) {
-            collectionPanel.add(createCollectionCard(card));
-        }
+        collectionPanel.setOpaque(false);
 
         wrapper.add(header, BorderLayout.NORTH);
         wrapper.add(collectionPanel, BorderLayout.CENTER);
@@ -353,120 +435,89 @@ public class Main extends JFrame {
         return scrollPane;
     }
 
-    private JPanel createInfoCard(String title, JLabel valueLabel) {
-        JPanel panel = createPanel(new BorderLayout(0, 8), new Color(15, 31, 49, 220));
-        panel.setBorder(BorderFactory.createCompoundBorder(
-                BorderFactory.createLineBorder(new Color(90, 120, 149, 70), 1, true),
-                BorderFactory.createEmptyBorder(12, 12, 12, 12)
-        ));
-
-        JLabel titleLabel = new JLabel(title);
-        titleLabel.setForeground(new Color(170, 188, 205));
-        titleLabel.setFont(new Font("SansSerif", Font.BOLD, 12));
-
-        panel.add(titleLabel, BorderLayout.NORTH);
-        panel.add(valueLabel, BorderLayout.CENTER);
-        return panel;
+    private void handlePlayCard() {
+        appendLog(game.playCard(selectedCard));
+        if (game.getWinner() == null) {
+            if (game.getCurrentPlayer().getHand().contains(selectedCard)) {
+                refreshUi("Carta seleccionada lista para jugar.");
+            } else if (!game.getCurrentPlayer().getHand().isEmpty()) {
+                selectedCard = game.getCurrentPlayer().getHand().get(0);
+                refreshUi("Carta jugada.");
+            } else if (!game.getCurrentPlayer().getBattlefield().isEmpty()) {
+                selectedCard = game.getCurrentPlayer().getBattlefield().get(0);
+                refreshUi("Carta jugada.");
+            } else {
+                selectedCard = null;
+                refreshUi("Carta jugada.");
+            }
+        } else {
+            refreshUi(game.getWinner().getName() + " ha ganado.");
+        }
     }
 
-    private JPanel createHandCard(Card card) {
-        JPanel panel = createPanel(new BorderLayout(0, 8), new Color(15, 27, 43, 225));
-        panel.setPreferredSize(new Dimension(170, 230));
-        panel.setBorder(BorderFactory.createCompoundBorder(
-                BorderFactory.createLineBorder(isSelected(card) ? new Color(255, 205, 102) : new Color(91, 122, 150, 90), 2, true),
-                BorderFactory.createEmptyBorder(10, 10, 10, 10)
-        ));
-
-        JLabel imageLabel = new JLabel(loadCardImage(card, 140, 145));
-        imageLabel.setHorizontalAlignment(SwingConstants.CENTER);
-
-        JLabel nameLabel = new JLabel("<html><center>" + card.getName() + "</center></html>", SwingConstants.CENTER);
-        nameLabel.setForeground(new Color(247, 236, 206));
-        nameLabel.setFont(new Font("SansSerif", Font.BOLD, 14));
-
-        JLabel metaLabel = new JLabel("<html><center>" + compactMeta(card) + "</center></html>", SwingConstants.CENTER);
-        metaLabel.setForeground(new Color(205, 214, 225));
-        metaLabel.setFont(new Font("SansSerif", Font.PLAIN, 12));
-
-        JButton button = createPrimaryButton("Ver");
-        button.setMargin(new Insets(6, 12, 6, 12));
-        button.addActionListener(event -> {
-            selectedCard = card;
-            refreshUi(selectedCard);
-        });
-
-        JPanel bottom = new JPanel();
-        bottom.setOpaque(false);
-        bottom.setLayout(new BoxLayout(bottom, BoxLayout.Y_AXIS));
-        nameLabel.setAlignmentX(Component.CENTER_ALIGNMENT);
-        metaLabel.setAlignmentX(Component.CENTER_ALIGNMENT);
-        button.setAlignmentX(Component.CENTER_ALIGNMENT);
-        bottom.add(nameLabel);
-        bottom.add(Box.createVerticalStrut(4));
-        bottom.add(metaLabel);
-        bottom.add(Box.createVerticalStrut(8));
-        bottom.add(button);
-
-        panel.add(imageLabel, BorderLayout.NORTH);
-        panel.add(bottom, BorderLayout.CENTER);
-        return panel;
+    private void handleAttack() {
+        CreatureCard creatureCard = selectedCard instanceof CreatureCard ? (CreatureCard) selectedCard : null;
+        appendLog(game.attackWith(creatureCard));
+        refreshUi(game.getWinner() == null ? "Ataque resuelto." : game.getWinner().getName() + " ha ganado.");
     }
 
-    private JPanel createCollectionCard(Card card) {
-        JPanel panel = createPanel(new BorderLayout(0, 8), new Color(23, 23, 23, 220));
-        panel.setPreferredSize(new Dimension(162, 184));
-        panel.setBorder(BorderFactory.createCompoundBorder(
-                BorderFactory.createLineBorder(isSelected(card) ? new Color(255, 205, 102) : new Color(217, 181, 90, 85), 2, true),
-                BorderFactory.createEmptyBorder(8, 8, 8, 8)
-        ));
-
-        JLabel imageLabel = new JLabel(loadCardImage(card, 136, 104));
-        imageLabel.setHorizontalAlignment(SwingConstants.CENTER);
-
-        JLabel nameLabel = new JLabel("<html><center>" + card.getName() + "</center></html>", SwingConstants.CENTER);
-        nameLabel.setForeground(new Color(245, 233, 198));
-        nameLabel.setFont(new Font("SansSerif", Font.BOLD, 13));
-
-        JButton button = createSecondaryButton("Seleccionar");
-        button.setMargin(new Insets(6, 10, 6, 10));
-        button.addActionListener(event -> {
-            selectedCard = card;
-            refreshUi(selectedCard);
-        });
-
-        JPanel bottom = new JPanel();
-        bottom.setOpaque(false);
-        bottom.setLayout(new BoxLayout(bottom, BoxLayout.Y_AXIS));
-        nameLabel.setAlignmentX(Component.CENTER_ALIGNMENT);
-        button.setAlignmentX(Component.CENTER_ALIGNMENT);
-        bottom.add(nameLabel);
-        bottom.add(Box.createVerticalStrut(8));
-        bottom.add(button);
-
-        panel.add(imageLabel, BorderLayout.NORTH);
-        panel.add(bottom, BorderLayout.CENTER);
-        return panel;
+    private void handleEndTurn() {
+        if (game.getWinner() != null) {
+            appendLog("La partida ya ha terminado.");
+            refreshUi("La partida ya ha terminado.");
+            return;
+        }
+        game.nextTurn();
+        selectedCard = game.getCurrentPlayer().getHand().isEmpty() ? null : game.getCurrentPlayer().getHand().get(0);
+        appendLog(game.getLastAction());
+        refreshUi("Cambio de turno.");
     }
 
-    private void refreshUi(Card cardToShow) {
-        titleStatusLabel.setText("Turno " + game.getTurnNumber() + "  |  " + game.getCurrentPlayer().getName());
-        turnLabel.setText("Turno " + game.getTurnNumber());
-        currentPlayerLabel.setText(game.getCurrentPlayer().getName() + " con " + game.getCurrentPlayer().getHand().size() + " cartas en mano");
-        opponentLabel.setText(game.getWaitingPlayer().getName() + " con " + game.getWaitingPlayer().getHand().size() + " cartas en mano");
-        deckLabel.setText(game.getCurrentPlayer().getDeckSize() + " cartas pendientes de robar");
-        hintLabel.setText("<html><body style='width:230px'>Usa <b>Robar carta</b> para anadir otra carta a tu mano o <b>Pasar turno</b> para cambiar al siguiente jugador.</body></html>");
+    private void refreshUi(String message) {
+        Player current = game.getCurrentPlayer();
+        Player opponent = game.getWaitingPlayer();
 
-        selectedNameLabel.setText(cardToShow.getName());
-        selectedMetaLabel.setText(buildMeta(cardToShow));
-        selectedDescriptionLabel.setText("<html><body style='width:520px'>" + cardToShow.getDescription() + "</body></html>");
-        selectedImageLabel.setIcon(loadCardImage(cardToShow, 430, 430));
-        selectedImageLabel.setText(selectedImageLabel.getIcon() == null ? "Imagen no disponible" : "");
+        if (selectedCard == null) {
+            if (!current.getHand().isEmpty()) {
+                selectedCard = current.getHand().get(0);
+            } else if (!current.getBattlefield().isEmpty()) {
+                selectedCard = current.getBattlefield().get(0);
+            }
+        }
 
-        rebuildHand();
-        rebuildCollectionHighlights();
+        statusLabel.setText(game.getWinner() != null
+                ? "Ganador: " + game.getWinner().getName()
+                : message + "  |  " + game.getLastAction());
+        currentTurnLabel.setText("Turno " + game.getTurnNumber() + " de " + current.getName());
+        currentStatsLabel.setText("Vida: " + current.getLife() + "  |  Mana: " + current.getMana() + "/" + current.getMaxMana() + "  |  Mano: " + current.getHand().size());
+        opponentStatsLabel.setText("Vida: " + opponent.getLife() + "  |  Mana: " + opponent.getMana() + "/" + opponent.getMaxMana() + "  |  Mano: " + opponent.getHand().size());
+        currentBoardLabel.setText(current.getBattlefield().size() + " criaturas en mesa");
+        opponentBoardLabel.setText(opponent.getBattlefield().size() + " criaturas en mesa");
+
+        rebuildBoardPanels();
+        rebuildHandPanel();
+        rebuildCollectionPanel();
+        updatePreview();
+        updateButtons();
     }
 
-    private void rebuildHand() {
+    private void rebuildBoardPanels() {
+        opponentBoardPanel.removeAll();
+        for (CreatureCard creature : game.getWaitingPlayer().getBattlefield()) {
+            opponentBoardPanel.add(createBoardCard(creature, false));
+        }
+        opponentBoardPanel.revalidate();
+        opponentBoardPanel.repaint();
+
+        playerBoardPanel.removeAll();
+        for (CreatureCard creature : game.getCurrentPlayer().getBattlefield()) {
+            playerBoardPanel.add(createBoardCard(creature, true));
+        }
+        playerBoardPanel.revalidate();
+        playerBoardPanel.repaint();
+    }
+
+    private void rebuildHandPanel() {
         handPanel.removeAll();
         for (Card card : game.getCurrentPlayer().getHand()) {
             handPanel.add(createHandCard(card));
@@ -475,7 +526,7 @@ public class Main extends JFrame {
         handPanel.repaint();
     }
 
-    private void rebuildCollectionHighlights() {
+    private void rebuildCollectionPanel() {
         collectionPanel.removeAll();
         for (Card card : collection) {
             collectionPanel.add(createCollectionCard(card));
@@ -484,42 +535,168 @@ public class Main extends JFrame {
         collectionPanel.repaint();
     }
 
-    private boolean isSelected(Card card) {
-        return selectedCard != null && selectedCard.getName().equals(card.getName());
+    private JPanel createBoardCard(CreatureCard creature, boolean currentPlayersCard) {
+        JPanel card = createPanel(new BorderLayout(0, 8), new Color(18, 28, 40, 220));
+        card.setPreferredSize(new Dimension(156, 200));
+        card.setBorder(BorderFactory.createCompoundBorder(
+                BorderFactory.createLineBorder(isSelected(creature) ? new Color(255, 206, 103) : new Color(92, 120, 148, 80), 2, true),
+                BorderFactory.createEmptyBorder(8, 8, 8, 8)
+        ));
+
+        JLabel image = new JLabel(loadCardImage(creature, 132, 100));
+        image.setHorizontalAlignment(SwingConstants.CENTER);
+
+        JLabel name = new JLabel("<html><center>" + creature.getName() + "</center></html>", SwingConstants.CENTER);
+        name.setForeground(new Color(245, 233, 202));
+        name.setFont(new Font("SansSerif", Font.BOLD, 13));
+
+        String combatText = creature.getPower() + "/" + creature.getToughness()
+                + (currentPlayersCard ? (creature.isReadyToAttack() ? "  |  Lista" : "  |  Espera") : "");
+        JLabel meta = new JLabel(combatText, SwingConstants.CENTER);
+        meta.setForeground(new Color(205, 214, 225));
+        meta.setFont(new Font("SansSerif", Font.PLAIN, 12));
+
+        JButton button = new JButton(currentPlayersCard ? "Seleccionar" : "Ver");
+        styleMiniButton(button, currentPlayersCard ? new Color(43, 72, 103) : new Color(90, 79, 47));
+        button.addActionListener(event -> {
+            selectedCard = creature;
+            refreshUi("Criatura seleccionada.");
+        });
+
+        JPanel bottom = new JPanel();
+        bottom.setOpaque(false);
+        bottom.setLayout(new BoxLayout(bottom, BoxLayout.Y_AXIS));
+        name.setAlignmentX(Component.CENTER_ALIGNMENT);
+        meta.setAlignmentX(Component.CENTER_ALIGNMENT);
+        button.setAlignmentX(Component.CENTER_ALIGNMENT);
+        bottom.add(name);
+        bottom.add(Box.createVerticalStrut(4));
+        bottom.add(meta);
+        bottom.add(Box.createVerticalStrut(8));
+        bottom.add(button);
+
+        card.add(image, BorderLayout.NORTH);
+        card.add(bottom, BorderLayout.CENTER);
+        return card;
     }
 
-    private JButton createPrimaryButton(String text) {
-        JButton button = new JButton(text);
-        button.setFocusPainted(false);
-        button.setBackground(new Color(193, 137, 46));
-        button.setForeground(new Color(250, 247, 241));
-        button.setFont(new Font("SansSerif", Font.BOLD, 14));
-        button.setBorder(BorderFactory.createEmptyBorder(10, 16, 10, 16));
-        return button;
-    }
+    private JPanel createHandCard(Card card) {
+        JPanel panel = createPanel(new BorderLayout(0, 8), new Color(14, 25, 40, 220));
+        panel.setPreferredSize(new Dimension(170, 238));
+        panel.setBorder(BorderFactory.createCompoundBorder(
+                BorderFactory.createLineBorder(isSelected(card) ? new Color(255, 206, 103) : new Color(95, 129, 160, 80), 2, true),
+                BorderFactory.createEmptyBorder(10, 10, 10, 10)
+        ));
 
-    private JButton createSecondaryButton(String text) {
-        JButton button = new JButton(text);
-        button.setFocusPainted(false);
-        button.setBackground(new Color(43, 72, 103));
-        button.setForeground(new Color(241, 245, 249));
-        button.setFont(new Font("SansSerif", Font.BOLD, 13));
-        button.setBorder(BorderFactory.createEmptyBorder(10, 16, 10, 16));
-        return button;
-    }
+        JLabel image = new JLabel(loadCardImage(card, 145, 130));
+        image.setHorizontalAlignment(SwingConstants.CENTER);
 
-    private JPanel createPanel(BorderLayout layout, Color color) {
-        JPanel panel = new JPanel(layout);
-        panel.setBackground(color);
+        JLabel name = new JLabel("<html><center>" + card.getName() + "</center></html>", SwingConstants.CENTER);
+        name.setForeground(new Color(247, 237, 208));
+        name.setFont(new Font("SansSerif", Font.BOLD, 14));
+
+        JLabel meta = new JLabel("<html><center>" + compactMeta(card) + "</center></html>", SwingConstants.CENTER);
+        meta.setForeground(new Color(211, 219, 228));
+        meta.setFont(new Font("SansSerif", Font.PLAIN, 12));
+
+        JButton button = new JButton("Seleccionar");
+        styleMiniButton(button, new Color(193, 137, 46));
+        button.addActionListener(event -> {
+            selectedCard = card;
+            refreshUi("Carta seleccionada.");
+        });
+
+        JPanel bottom = new JPanel();
+        bottom.setOpaque(false);
+        bottom.setLayout(new BoxLayout(bottom, BoxLayout.Y_AXIS));
+        name.setAlignmentX(Component.CENTER_ALIGNMENT);
+        meta.setAlignmentX(Component.CENTER_ALIGNMENT);
+        button.setAlignmentX(Component.CENTER_ALIGNMENT);
+        bottom.add(name);
+        bottom.add(Box.createVerticalStrut(4));
+        bottom.add(meta);
+        bottom.add(Box.createVerticalStrut(8));
+        bottom.add(button);
+
+        panel.add(image, BorderLayout.NORTH);
+        panel.add(bottom, BorderLayout.CENTER);
         return panel;
     }
 
-    private void styleScrollPane(JScrollPane scrollPane) {
-        scrollPane.setBorder(BorderFactory.createEmptyBorder());
-        scrollPane.setOpaque(false);
-        scrollPane.getViewport().setOpaque(false);
-        scrollPane.getVerticalScrollBar().setUnitIncrement(14);
-        scrollPane.getHorizontalScrollBar().setUnitIncrement(14);
+    private JPanel createCollectionCard(Card card) {
+        JPanel panel = createPanel(new BorderLayout(0, 8), new Color(24, 24, 24, 220));
+        panel.setPreferredSize(new Dimension(150, 178));
+        panel.setBorder(BorderFactory.createCompoundBorder(
+                BorderFactory.createLineBorder(isSelected(card) ? new Color(255, 206, 103) : new Color(214, 179, 90, 60), 2, true),
+                BorderFactory.createEmptyBorder(8, 8, 8, 8)
+        ));
+
+        JLabel image = new JLabel(loadCardImage(card, 124, 90));
+        image.setHorizontalAlignment(SwingConstants.CENTER);
+
+        JLabel name = new JLabel("<html><center>" + card.getName() + "</center></html>", SwingConstants.CENTER);
+        name.setForeground(new Color(243, 232, 199));
+        name.setFont(new Font("SansSerif", Font.BOLD, 12));
+
+        JButton button = new JButton("Ver");
+        styleMiniButton(button, new Color(90, 79, 47));
+        button.addActionListener(event -> {
+            selectedCard = card;
+            refreshUi("Carta de la coleccion seleccionada.");
+        });
+
+        JPanel bottom = new JPanel();
+        bottom.setOpaque(false);
+        bottom.setLayout(new BoxLayout(bottom, BoxLayout.Y_AXIS));
+        name.setAlignmentX(Component.CENTER_ALIGNMENT);
+        button.setAlignmentX(Component.CENTER_ALIGNMENT);
+        bottom.add(name);
+        bottom.add(Box.createVerticalStrut(8));
+        bottom.add(button);
+
+        panel.add(image, BorderLayout.NORTH);
+        panel.add(bottom, BorderLayout.CENTER);
+        return panel;
+    }
+
+    private void updatePreview() {
+        if (selectedCard == null) {
+            previewNameLabel.setText("Sin seleccion");
+            previewMetaLabel.setText("Selecciona una carta de tu mano o de la mesa.");
+            previewHintLabel.setText("<html><body style='width:320px'>Cuando selecciones una carta veras aqui su imagen grande, sus estadisticas y si se puede jugar o usar para atacar.</body></html>");
+            previewImageLabel.setIcon(null);
+            previewImageLabel.setText("Sin carta");
+            return;
+        }
+
+        previewNameLabel.setText(selectedCard.getName());
+        previewMetaLabel.setText(buildMeta(selectedCard));
+        previewHintLabel.setText("<html><body style='width:320px'>" + buildPreviewHelp(selectedCard) + "</body></html>");
+        previewImageLabel.setIcon(loadCardImage(selectedCard, 300, 390));
+        previewImageLabel.setText(previewImageLabel.getIcon() == null ? "Imagen no disponible" : "");
+    }
+
+    private void updateButtons() {
+        boolean gameFinished = game.getWinner() != null;
+        boolean cardInHand = selectedCard != null && game.getCurrentPlayer().getHand().contains(selectedCard);
+        boolean creatureOnBoard = selectedCard instanceof CreatureCard
+                && game.getCurrentPlayer().getBattlefield().contains(selectedCard)
+                && ((CreatureCard) selectedCard).isReadyToAttack();
+
+        playButton.setEnabled(!gameFinished && cardInHand && game.getCurrentPlayer().canPlay(selectedCard));
+        attackButton.setEnabled(!gameFinished && creatureOnBoard);
+        endTurnButton.setEnabled(!gameFinished);
+    }
+
+    private void appendLog(String text) {
+        if (text == null || text.isBlank()) {
+            return;
+        }
+        if (!logArea.getText().isBlank()) {
+            logArea.append("\n");
+        }
+        logArea.append(text);
+        logArea.setCaretPosition(logArea.getDocument().getLength());
     }
 
     private List<Card> buildCollection() {
@@ -546,14 +723,35 @@ public class Main extends JFrame {
         int cost = 1 + Math.floorMod(name.length(), 6);
 
         if (isSpellCard(name)) {
-            String effect = "Activa la habilidad especial de " + name + " y cambia el ritmo de la partida.";
-            return new SpellCard(name, cost, effect, imagePath);
+            int damage = 2 + Math.floorMod(name.hashCode(), 4);
+            int healing = name.toLowerCase(Locale.ROOT).contains("humoo") ? 3 : 0;
+            int cardsToDraw = name.toLowerCase(Locale.ROOT).contains("hackear") || name.toLowerCase(Locale.ROOT).contains("monof1") ? 1 : 0;
+            String effect = buildSpellDescription(name, damage, healing, cardsToDraw);
+            return new SpellCard(name, cost, effect, damage, healing, cardsToDraw, imagePath);
         }
 
         int power = 2 + Math.floorMod(name.hashCode(), 5);
-        int toughness = 2 + Math.floorMod(name.hashCode() / 7, 5);
-        String description = name + " entra en escena como una carta legendaria personalizada con presencia propia en el tablero.";
+        int toughness = 3 + Math.floorMod(name.hashCode() / 7, 4);
+        String description = name + " entra en escena como criatura personalizada. Debe esperar un turno para atacar y luego puede presionar al rival directamente.";
         return new CreatureCard(name, cost, power, toughness, description, imagePath);
+    }
+
+    private String buildSpellDescription(String name, int damage, int healing, int cardsToDraw) {
+        StringBuilder description = new StringBuilder(name).append(" desata un efecto especial.");
+        if (damage > 0) {
+            description.append(" Inflige ").append(damage).append(" de dano al rival.");
+        }
+        if (healing > 0) {
+            description.append(" Tambien cura ").append(healing).append(" vidas.");
+        }
+        if (cardsToDraw > 0) {
+            description.append(" Ademas roba ").append(cardsToDraw).append(" carta");
+            if (cardsToDraw > 1) {
+                description.append("s");
+            }
+            description.append(".");
+        }
+        return description.toString();
     }
 
     private boolean isSpellCard(String name) {
@@ -588,36 +786,114 @@ public class Main extends JFrame {
             }
             return builder.toString();
         }
-
         return cleanName;
     }
 
     private String buildMeta(Card card) {
         if (card instanceof CreatureCard creature) {
-            return "Tipo: " + card.getType() + "  |  Coste: " + card.getCost() + "  |  Ataque/Vida: " + creature.getPower() + "/" + creature.getToughness();
+            return "Criatura  |  Coste " + card.getCost() + "  |  " + creature.getPower() + "/" + creature.getToughness();
         }
         if (card instanceof SpellCard spellCard) {
-            return "Tipo: " + card.getType() + "  |  Coste: " + card.getCost() + "  |  Efecto: " + spellCard.getEffect();
+            return "Hechizo  |  Coste " + card.getCost() + "  |  " + spellCard.getEffect();
         }
-        return "Tipo: " + card.getType() + "  |  Coste: " + card.getCost();
+        return card.getType() + "  |  Coste " + card.getCost();
     }
 
     private String compactMeta(Card card) {
         if (card instanceof CreatureCard creature) {
             return "Coste " + card.getCost() + "  |  " + creature.getPower() + "/" + creature.getToughness();
         }
-        return "Coste " + card.getCost() + "  |  " + card.getType();
+        return "Coste " + card.getCost() + "  |  Hechizo";
     }
 
-    private ImageIcon loadCardImage(Card card, int width, int height) {
+    private String buildPreviewHelp(Card card) {
+        if (game.getWinner() != null) {
+            return "La partida ha terminado. Puedes empezar una nueva cuando quieras.";
+        }
+        if (game.getCurrentPlayer().getHand().contains(card)) {
+            if (game.getCurrentPlayer().canPlay(card)) {
+                return "Esta carta esta en tu mano y puedes jugarla ahora mismo.";
+            }
+            return "Esta carta esta en tu mano, pero ahora no tienes mana suficiente para jugarla.";
+        }
+        if (card instanceof CreatureCard creature && game.getCurrentPlayer().getBattlefield().contains(creature)) {
+            if (creature.isReadyToAttack()) {
+                return "Esta criatura esta en tu mesa y ya puede atacar.";
+            }
+            return "Esta criatura esta en tu mesa, pero aun no puede atacar este turno.";
+        }
+        return card.getDescription();
+    }
+
+    private boolean isSelected(Card card) {
+        return selectedCard != null && card != null && selectedCard.getName().equals(card.getName());
+    }
+
+    private ImageIcon loadCardImage(Card card, int maxWidth, int maxHeight) {
         URL resource = getClass().getClassLoader().getResource(card.getImagePath());
         if (resource == null) {
             return null;
         }
+        try {
+            BufferedImage original = ImageIO.read(resource);
+            if (original == null) {
+                return null;
+            }
+            double scale = Math.min((double) maxWidth / original.getWidth(), (double) maxHeight / original.getHeight());
+            scale = Math.min(scale, 1.0);
+            int width = Math.max(1, (int) Math.round(original.getWidth() * scale));
+            int height = Math.max(1, (int) Math.round(original.getHeight() * scale));
+            Image scaled = original.getScaledInstance(width, height, Image.SCALE_SMOOTH);
+            return new ImageIcon(scaled);
+        } catch (IOException exception) {
+            return null;
+        }
+    }
 
-        ImageIcon icon = new ImageIcon(resource);
-        Image scaled = icon.getImage().getScaledInstance(width, height, Image.SCALE_SMOOTH);
-        return new ImageIcon(scaled);
+    private JPanel createPanel(BorderLayout layout, Color color) {
+        JPanel panel = new JPanel(layout);
+        panel.setBackground(color);
+        return panel;
+    }
+
+    private void styleScrollPane(JScrollPane scrollPane) {
+        scrollPane.setOpaque(false);
+        scrollPane.getViewport().setOpaque(false);
+        scrollPane.getVerticalScrollBar().setUnitIncrement(16);
+        scrollPane.getHorizontalScrollBar().setUnitIncrement(16);
+    }
+
+    private void stylePrimaryButton(JButton button) {
+        button.setFocusPainted(false);
+        button.setBackground(new Color(193, 137, 46));
+        button.setForeground(new Color(250, 247, 241));
+        button.setFont(new Font("SansSerif", Font.BOLD, 14));
+        button.setBorder(BorderFactory.createEmptyBorder(11, 16, 11, 16));
+    }
+
+    private void styleAccentButton(JButton button) {
+        button.setFocusPainted(false);
+        button.setBackground(new Color(150, 63, 48));
+        button.setForeground(new Color(250, 247, 241));
+        button.setFont(new Font("SansSerif", Font.BOLD, 14));
+        button.setBorder(BorderFactory.createEmptyBorder(11, 16, 11, 16));
+    }
+
+    private void styleSecondaryButton(JButton button) {
+        button.setFocusPainted(false);
+        button.setBackground(new Color(45, 71, 100));
+        button.setForeground(new Color(244, 247, 250));
+        button.setFont(new Font("SansSerif", Font.BOLD, 14));
+        button.setBorder(BorderFactory.createEmptyBorder(11, 16, 11, 16));
+    }
+
+    private void styleMiniButton(JButton button, Color background) {
+        button.setFocusPainted(false);
+        button.setBackground(background);
+        button.setForeground(new Color(248, 247, 243));
+        button.setFont(new Font("SansSerif", Font.BOLD, 12));
+        button.setBorder(BorderFactory.createEmptyBorder(7, 12, 7, 12));
+        button.setMargin(new Insets(7, 12, 7, 12));
     }
 
     public static void main(String[] args) {
@@ -636,7 +912,7 @@ public class Main extends JFrame {
             super.paintComponent(graphics);
             Graphics2D g2 = (Graphics2D) graphics.create();
             g2.setRenderingHint(RenderingHints.KEY_RENDERING, RenderingHints.VALUE_RENDER_QUALITY);
-            g2.setPaint(new GradientPaint(0, 0, new Color(4, 10, 18), getWidth(), getHeight(), new Color(32, 20, 9)));
+            g2.setPaint(new GradientPaint(0, 0, new Color(3, 8, 16), getWidth(), getHeight(), new Color(28, 16, 8)));
             g2.fillRect(0, 0, getWidth(), getHeight());
             g2.dispose();
         }
