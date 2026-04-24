@@ -17,6 +17,8 @@ public class Game {
     }
 
     public void startGame() {
+        player1.resetForNewGame();
+        player2.resetForNewGame();
         player1.shuffleDeck();
         player2.shuffleDeck();
 
@@ -39,7 +41,8 @@ public class Game {
         currentPlayer = (currentPlayer == player1) ? player2 : player1;
         turnNumber++;
         currentPlayer.startTurn();
-        lastAction = "Empieza el turno de " + currentPlayer.getName() + ".";
+        lastAction = "Empieza el turno de " + currentPlayer.getName()
+                + ". Roba carta y recupera su mana.";
     }
 
     public Player getPlayer1() {
@@ -64,6 +67,20 @@ public class Game {
 
     public Player getWinner() {
         return winner;
+    }
+
+    public boolean canPlaySelectedCard(Card card) {
+        return winner == null
+                && card != null
+                && currentPlayer.getHand().contains(card)
+                && currentPlayer.canPlay(card);
+    }
+
+    public boolean canAttackWith(CreatureCard creatureCard) {
+        return winner == null
+                && creatureCard != null
+                && currentPlayer.getBattlefield().contains(creatureCard)
+                && creatureCard.isReadyToAttack();
     }
 
     public String playCard(Card card) {

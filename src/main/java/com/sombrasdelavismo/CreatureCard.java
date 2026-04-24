@@ -49,7 +49,12 @@ public class CreatureCard extends Card {
     }
 
     @Override
+    public Card copy() {
+        return new CreatureCard(name, cost, power, toughness, description, imagePath);
+    }
+
+    @Override
     public void play() {
-        System.out.println("Playing creature: " + name);
+        // No side effects needed here; resolution happens in Game.
     }
 }

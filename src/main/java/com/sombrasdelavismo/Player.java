@@ -20,7 +20,7 @@ public class Player {
         this.battlefield = new ArrayList<>();
         this.life = 20;
         this.mana = 0;
-        this.maxMana = 2;
+        this.maxMana = 0;
     }
 
     public void addCardToDeck(Card card) {
@@ -78,6 +78,18 @@ public class Player {
 
     public boolean removeFromHand(Card card) {
         return hand.remove(card);
+    }
+
+    public void clearBattlefield() {
+        battlefield.clear();
+    }
+
+    public void resetForNewGame() {
+        hand.clear();
+        battlefield.clear();
+        life = 20;
+        mana = 0;
+        maxMana = 0;
     }
 
     public int getMana() {

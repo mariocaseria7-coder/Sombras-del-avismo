@@ -35,5 +35,7 @@ public abstract class Card {
         return imagePath;
     }
 
+    public abstract Card copy();
+
     public abstract void play();
 }

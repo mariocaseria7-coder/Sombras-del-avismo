@@ -580,12 +580,10 @@ public class Main extends JFrame {
 
     private void updateButtons() {
         boolean finished = game.getWinner() != null;
-        boolean inHand = selectedCard != null && game.getCurrentPlayer().getHand().contains(selectedCard);
-        boolean canAttack = selectedCard instanceof CreatureCard
-                && game.getCurrentPlayer().getBattlefield().contains(selectedCard)
-                && ((CreatureCard) selectedCard).isReadyToAttack();
+        boolean canPlay = game.canPlaySelectedCard(selectedCard);
+        boolean canAttack = selectedCard instanceof CreatureCard creature && game.canAttackWith(creature);
 
-        playButton.setEnabled(!finished && inHand && game.getCurrentPlayer().canPlay(selectedCard));
+        playButton.setEnabled(!finished && canPlay);
         attackButton.setEnabled(!finished && canAttack);
         endTurnButton.setEnabled(!finished);
     }
@@ -611,10 +609,11 @@ public class Main extends JFrame {
 
     private void dealCards(Player player1, Player player2, List<Card> cards) {
         for (int index = 0; index < cards.size(); index++) {
+            Card deckCard = cards.get(index).copy();
             if (index % 2 == 0) {
-                player1.addCardToDeck(cards.get(index));
+                player1.addCardToDeck(deckCard);
             } else {
-                player2.addCardToDeck(cards.get(index));
+                player2.addCardToDeck(deckCard);
             }
         }
     }

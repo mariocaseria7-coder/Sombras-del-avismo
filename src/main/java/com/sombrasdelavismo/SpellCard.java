@@ -31,7 +31,12 @@ public class SpellCard extends Card {
     }
 
     @Override
+    public Card copy() {
+        return new SpellCard(name, cost, effect, damage, healing, cardsToDraw, imagePath);
+    }
+
+    @Override
     public void play() {
-        System.out.println("Casting spell: " + name + " - " + effect);
+        // No side effects needed here; resolution happens in Game.
     }
 }
