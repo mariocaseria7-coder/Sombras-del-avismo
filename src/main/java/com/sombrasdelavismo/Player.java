@@ -5,6 +5,8 @@ import java.util.Collections;
 import java.util.List;
 
 public class Player {
+    private static final int DEFAULT_MANA = 15;
+
     private final String name;
     private final List<Card> deck;
     private final List<Card> hand;
@@ -19,8 +21,8 @@ public class Player {
         this.hand = new ArrayList<>();
         this.battlefield = new ArrayList<>();
         this.life = 20;
-        this.mana = 0;
-        this.maxMana = 0;
+        this.mana = DEFAULT_MANA;
+        this.maxMana = DEFAULT_MANA;
     }
 
     public void addCardToDeck(Card card) {
@@ -76,6 +78,10 @@ public class Player {
         battlefield.add(creatureCard);
     }
 
+    public boolean removeFromBattlefield(CreatureCard creatureCard) {
+        return battlefield.remove(creatureCard);
+    }
+
     public boolean removeFromHand(Card card) {
         return hand.remove(card);
     }
@@ -88,8 +94,8 @@ public class Player {
         hand.clear();
         battlefield.clear();
         life = 20;
-        mana = 0;
-        maxMana = 0;
+        mana = DEFAULT_MANA;
+        maxMana = DEFAULT_MANA;
     }
 
     public int getMana() {
@@ -101,7 +107,6 @@ public class Player {
     }
 
     public void startTurn() {
-        maxMana = Math.min(10, maxMana + 1);
         mana = maxMana;
         drawCard();
         for (CreatureCard creature : battlefield) {

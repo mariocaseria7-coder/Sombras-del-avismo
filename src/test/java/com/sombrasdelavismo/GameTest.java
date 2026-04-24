@@ -59,6 +59,35 @@ class GameTest {
     }
 
     @Test
+    void creatureCombatCanDestroyBothCreatures() {
+        Player player1 = new Player("Alice");
+        Player player2 = new Player("Bob");
+        CreatureCard attacker = new CreatureCard("Tigre", 1, 3, 2, "Criatura", "cards/tiger.jpg");
+        CreatureCard defender = new CreatureCard("Oso", 1, 2, 3, "Criatura", "cards/bear.jpg");
+
+        player1.addCardToDeck(attacker);
+        player2.addCardToDeck(defender);
+        for (int i = 0; i < 4; i++) {
+            player1.addCardToDeck(new SpellCard("Relleno " + i, 1, "Nada", 0, 0, 0, "cards/fill.jpg"));
+            player2.addCardToDeck(new SpellCard("Relleno rival " + i, 1, "Nada", 0, 0, 0, "cards/fill.jpg"));
+        }
+
+        Game game = new Game(player1, player2);
+        game.startGame();
+        game.playCard(attacker);
+        game.nextTurn();
+        game.playCard(defender);
+        game.nextTurn();
+
+        assertTrue(game.canAttackTarget(attacker, defender));
+        String result = game.attackCreature(attacker, defender);
+
+        assertFalse(player1.getBattlefield().contains(attacker));
+        assertFalse(player2.getBattlefield().contains(defender));
+        assertTrue(result.contains("Ambas criaturas son destruidas"));
+    }
+
+    @Test
     void copiedCardsDoNotShareState() {
         CreatureCard original = new CreatureCard("Bestia", 2, 3, 2, "Criatura", "cards/beast.jpg");
         CreatureCard copy = (CreatureCard) original.copy();

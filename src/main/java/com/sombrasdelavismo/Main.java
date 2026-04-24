@@ -92,6 +92,8 @@ public class Main extends JFrame {
     private Game game;
     private List<Card> collection;
     private Card selectedCard;
+    private CreatureCard selectedAttacker;
+    private CreatureCard selectedDefender;
     private String playerOneName = "Jugador 1";
     private String playerTwoName = "Jugador 2";
     private long matchStartTime;
@@ -99,9 +101,12 @@ public class Main extends JFrame {
 
     private final JLabel statusLabel = new JLabel();
     private final JLabel turnLabel = new JLabel();
+    private final JLabel manaLabel = new JLabel();
     private final JLabel timerLabel = new JLabel();
     private final JLabel playerOneLabel = new JLabel();
     private final JLabel playerTwoLabel = new JLabel();
+    private final JLabel playerOneManaLabel = new JLabel();
+    private final JLabel playerTwoManaLabel = new JLabel();
     private final JLabel topBoardTitleLabel = new JLabel();
     private final JLabel bottomBoardTitleLabel = new JLabel();
     private final JLabel handTitleLabel = new JLabel();
@@ -115,7 +120,8 @@ public class Main extends JFrame {
     private final JPanel handPanel = new JPanel(new FlowLayout(FlowLayout.LEFT, 10, 10));
     private final JPanel collectionPanel = new JPanel(new FlowLayout(FlowLayout.LEFT, 10, 10));
     private final JButton playButton = new JButton("Jugar");
-    private final JButton attackButton = new JButton("Atacar");
+    private final JButton attackButton = new JButton("Atacar jugador");
+    private final JButton fightButton = new JButton("Atacar criatura");
     private final JButton endTurnButton = new JButton("Pasar turno");
     private final JButton helpButton = new JButton("Como jugar");
 
@@ -135,6 +141,8 @@ public class Main extends JFrame {
         dealCards(player1, player2, collection);
         game = new Game(player1, player2);
         game.startGame();
+        selectedAttacker = null;
+        selectedDefender = null;
         selectedCard = findBestSelection();
         matchStartTime = System.currentTimeMillis();
         ensureMatchTimerRunning();
@@ -222,26 +230,39 @@ public class Main extends JFrame {
 
         turnLabel.setForeground(new Color(255, 210, 120));
         turnLabel.setFont(new Font("SansSerif", Font.BOLD, 18));
+        manaLabel.setForeground(new Color(126, 214, 158));
+        manaLabel.setFont(new Font("SansSerif", Font.BOLD, 20));
         timerLabel.setForeground(new Color(190, 205, 220));
         timerLabel.setFont(new Font("SansSerif", Font.PLAIN, 15));
         playerOneLabel.setForeground(new Color(230, 236, 242));
         playerOneLabel.setFont(new Font("SansSerif", Font.PLAIN, 15));
         playerTwoLabel.setForeground(new Color(230, 236, 242));
         playerTwoLabel.setFont(new Font("SansSerif", Font.PLAIN, 15));
+        playerOneManaLabel.setForeground(new Color(126, 214, 158));
+        playerOneManaLabel.setFont(new Font("SansSerif", Font.BOLD, 14));
+        playerTwoManaLabel.setForeground(new Color(126, 214, 158));
+        playerTwoManaLabel.setFont(new Font("SansSerif", Font.BOLD, 14));
 
         JPanel stats = new JPanel();
         stats.setOpaque(false);
         stats.setLayout(new BoxLayout(stats, BoxLayout.Y_AXIS));
         stats.add(turnLabel);
+        stats.add(Box.createVerticalStrut(8));
+        stats.add(manaLabel);
         stats.add(Box.createVerticalStrut(10));
         stats.add(timerLabel);
         stats.add(Box.createVerticalStrut(8));
         stats.add(playerOneLabel);
+        stats.add(Box.createVerticalStrut(4));
+        stats.add(playerOneManaLabel);
         stats.add(Box.createVerticalStrut(8));
         stats.add(playerTwoLabel);
+        stats.add(Box.createVerticalStrut(4));
+        stats.add(playerTwoManaLabel);
 
         styleButton(playButton, new Color(190, 130, 50));
         styleButton(attackButton, new Color(150, 70, 60));
+        styleButton(fightButton, new Color(115, 74, 130));
         styleButton(endTurnButton, new Color(60, 95, 130));
         styleButton(helpButton, new Color(84, 106, 66));
 
@@ -250,6 +271,7 @@ public class Main extends JFrame {
 
         playButton.addActionListener(event -> handlePlayCard());
         attackButton.addActionListener(event -> handleAttack());
+        fightButton.addActionListener(event -> handleFight());
         endTurnButton.addActionListener(event -> handleEndTurn());
         helpButton.addActionListener(event -> showHowToPlayDialog());
         newGameButton.addActionListener(event -> {
@@ -260,9 +282,10 @@ public class Main extends JFrame {
 
         JPanel buttons = new JPanel();
         buttons.setOpaque(false);
-        buttons.setLayout(new GridLayout(5, 1, 0, 10));
+        buttons.setLayout(new GridLayout(6, 1, 0, 10));
         buttons.add(playButton);
         buttons.add(attackButton);
+        buttons.add(fightButton);
         buttons.add(endTurnButton);
         buttons.add(helpButton);
         buttons.add(newGameButton);
@@ -338,9 +361,18 @@ public class Main extends JFrame {
     }
 
     private void handleAttack() {
-        CreatureCard creature = selectedCard instanceof CreatureCard ? (CreatureCard) selectedCard : null;
+        CreatureCard creature = resolveSelectedAttacker();
         String attackResult = game.attackWith(creature);
         appendLog(attackResult);
+        clearCombatSelectionAfterAction();
+        refreshUi(attackResult);
+    }
+
+    private void handleFight() {
+        CreatureCard attacker = resolveSelectedAttacker();
+        String attackResult = game.attackCreature(attacker, selectedDefender);
+        appendLog(attackResult);
+        clearCombatSelectionAfterAction();
         refreshUi(attackResult);
     }
 
@@ -351,6 +383,8 @@ public class Main extends JFrame {
             return;
         }
         game.nextTurn();
+        selectedAttacker = null;
+        selectedDefender = null;
         selectedCard = findBestSelection();
         appendLog(game.getLastAction());
         refreshUi(game.getLastAction());
@@ -366,7 +400,10 @@ public class Main extends JFrame {
         turnLabel.setText("Turno " + game.getTurnNumber() + " - " + current.getName());
         playerOneLabel.setText(buildPlayerStatus(playerOne));
         playerTwoLabel.setText(buildPlayerStatus(playerTwo));
+        playerOneManaLabel.setText("Mana de " + playerOne.getName() + ": " + playerOne.getMana() + "/" + playerOne.getMaxMana());
+        playerTwoManaLabel.setText("Mana de " + playerTwo.getName() + ": " + playerTwo.getMana() + "/" + playerTwo.getMaxMana());
         timerLabel.setText("Tiempo de partida: " + formatElapsedTime());
+        manaLabel.setText("Mana actual: " + current.getMana() + "/" + current.getMaxMana());
         topBoardTitleLabel.setText("Mesa de " + waiting.getName());
         bottomBoardTitleLabel.setText("Mesa de " + current.getName());
         handTitleLabel.setText("Mano de " + current.getName());
@@ -421,25 +458,42 @@ public class Main extends JFrame {
         image.setHorizontalAlignment(SwingConstants.CENTER);
 
         JLabel name = smallCenteredLabel(creature.getName(), true);
-        String status = currentPlayersCard ? (creature.isReadyToAttack() ? "Lista para atacar" : "Esperando turno") : "Criatura rival";
+        String status;
+        if (currentPlayersCard) {
+            if (selectedAttacker == creature) {
+                status = "Atacante elegida";
+            } else {
+                status = creature.isReadyToAttack() ? "Lista para atacar" : "Esperando turno";
+            }
+        } else {
+            status = selectedDefender == creature ? "Objetivo elegido" : "Criatura rival";
+        }
         JLabel meta = smallCenteredLabel("Coste " + creature.getCost() + " | " + creature.getPower() + "/" + creature.getToughness(), false);
         JLabel detail = smallCenteredLabel(status, false);
 
         JButton button = new JButton("Seleccionar");
         styleMiniButton(button);
-        button.setEnabled(currentPlayersCard);
+        button.setEnabled(currentPlayersCard || selectedAttacker != null);
         button.addActionListener(event -> {
             selectedCard = creature;
-            refreshUi("Carta seleccionada.");
+            if (currentPlayersCard) {
+                selectedAttacker = creature;
+                refreshUi("Criatura atacante seleccionada.");
+                return;
+            }
+            selectedDefender = creature;
+            refreshUi("Criatura rival seleccionada como objetivo.");
         });
 
         JButton attackCardButton = new JButton("Atacar");
         styleMiniButton(attackCardButton);
         attackCardButton.setEnabled(currentPlayersCard && creature.isReadyToAttack());
         attackCardButton.addActionListener(event -> {
+            selectedAttacker = creature;
             selectedCard = creature;
             String attackResult = game.attackWith(creature);
             appendLog(attackResult);
+            clearCombatSelectionAfterAction();
             refreshUi(attackResult);
         });
 
@@ -565,7 +619,7 @@ public class Main extends JFrame {
         if (selectedCard == null) {
             previewNameLabel.setText("Sin carta seleccionada");
             previewMetaLabel.setText("Selecciona una carta de tu mano o de tu mesa.");
-            previewHelpLabel.setText("<html><body style='width:520px'>Selecciona una carta de tu mano, tu mesa o la coleccion para verla grande. Si esta en tu mano podras jugarla, y si ya esta en tu mesa podras atacar cuando quede lista.</body></html>");
+            previewHelpLabel.setText("<html><body style='width:520px'>Selecciona una carta de tu mano, tu mesa o la coleccion para verla grande. Si eliges una criatura tuya lista, podras atacar al jugador rival o a una criatura enemiga.</body></html>");
             previewImageLabel.setIcon(null);
             previewImageLabel.setText("Sin carta");
             return;
@@ -581,10 +635,13 @@ public class Main extends JFrame {
     private void updateButtons() {
         boolean finished = game.getWinner() != null;
         boolean canPlay = game.canPlaySelectedCard(selectedCard);
-        boolean canAttack = selectedCard instanceof CreatureCard creature && game.canAttackWith(creature);
+        CreatureCard attacker = resolveSelectedAttacker();
+        boolean canAttack = game.canAttackWith(attacker);
+        boolean canFight = game.canAttackTarget(attacker, selectedDefender);
 
         playButton.setEnabled(!finished && canPlay);
         attackButton.setEnabled(!finished && canAttack);
+        fightButton.setEnabled(!finished && canFight);
         endTurnButton.setEnabled(!finished);
     }
 
@@ -729,8 +786,13 @@ public class Main extends JFrame {
         }
         if (card instanceof CreatureCard creature && game.getCurrentPlayer().getBattlefield().contains(creature)) {
             return creature.isReadyToAttack()
-                    ? "Esta criatura esta lista para atacar."
+                    ? "Esta criatura esta lista para atacar. Puedes golpear al jugador rival o seleccionar una criatura enemiga para combatir."
                     : "Esta criatura aun no puede atacar este turno.";
+        }
+        if (card instanceof CreatureCard creature && game.getWaitingPlayer().getBattlefield().contains(creature)) {
+            return selectedAttacker == null
+                    ? "Esta criatura pertenece al rival. Selecciona primero una criatura tuya lista para poder atacarla."
+                    : "Esta criatura rival puede ser el objetivo del combate.";
         }
         return card.getDescription();
     }
@@ -809,6 +871,30 @@ public class Main extends JFrame {
             return;
         }
         refreshUi("Carta seleccionada. Necesitas mas mana para jugarla.");
+    }
+
+    private CreatureCard resolveSelectedAttacker() {
+        if (selectedAttacker != null && game.getCurrentPlayer().getBattlefield().contains(selectedAttacker)) {
+            return selectedAttacker;
+        }
+        if (selectedCard instanceof CreatureCard creature && game.getCurrentPlayer().getBattlefield().contains(creature)) {
+            selectedAttacker = creature;
+            return creature;
+        }
+        return null;
+    }
+
+    private void clearCombatSelectionAfterAction() {
+        if (selectedAttacker != null && !game.getCurrentPlayer().getBattlefield().contains(selectedAttacker)) {
+            selectedAttacker = null;
+        }
+        if (selectedAttacker != null && !selectedAttacker.isReadyToAttack()) {
+            selectedAttacker = null;
+        }
+        if (selectedDefender != null && !game.getWaitingPlayer().getBattlefield().contains(selectedDefender)) {
+            selectedDefender = null;
+        }
+        selectedCard = findBestSelection();
     }
 
     private String buildPlayerStatus(Player player) {
@@ -893,14 +979,16 @@ public class Main extends JFrame {
     private String buildHelpText() {
         StringBuilder text = new StringBuilder();
         text.append("COMO SE JUEGA\n\n");
-        text.append("1. En tu turno robas carta y recuperas mana automaticamente.\n");
-        text.append("2. Puedes jugar varias cartas en el mismo turno mientras tengas mana.\n");
+        text.append("1. Cada jugador empieza con 15 de mana.\n");
+        text.append("2. En tu turno robas carta y recuperas el mana automaticamente.\n");
         text.append("3. Selecciona una carta de tu mano y pulsa Jugar para bajarla.\n");
         text.append("4. Las criaturas entran a tu mesa y no atacan el mismo turno en que se juegan.\n");
-        text.append("5. En tu siguiente turno, selecciona una criatura lista y pulsa Atacar.\n");
-        text.append("6. Los hechizos hacen daño, curan o te hacen robar cartas al momento.\n");
-        text.append("7. Pulsa Pasar turno solo cuando hayas terminado de jugar y atacar.\n");
-        text.append("8. Gana quien deje al rival sin vidas.\n\n");
+        text.append("5. En tu siguiente turno, selecciona una criatura lista para atacar.\n");
+        text.append("6. Puedes atacar directamente al jugador rival o seleccionar una criatura enemiga y pulsar Atacar criatura.\n");
+        text.append("7. En el combate entre criaturas, ambas hacen dano a la vez y pueden ser destruidas.\n");
+        text.append("8. Los hechizos hacen daño, curan o te hacen robar cartas al momento.\n");
+        text.append("9. Pulsa Pasar turno solo cuando hayas terminado de jugar y atacar.\n");
+        text.append("10. Gana quien deje al rival sin vidas.\n\n");
         text.append("QUE PUEDES VER EN LA PANTALLA\n\n");
         text.append("- Tu mano: cartas que puedes jugar si tienes mana suficiente.\n");
         text.append("- Tu mesa: criaturas ya invocadas.\n");

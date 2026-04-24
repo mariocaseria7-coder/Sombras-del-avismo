@@ -83,6 +83,12 @@ public class Game {
                 && creatureCard.isReadyToAttack();
     }
 
+    public boolean canAttackTarget(CreatureCard attacker, CreatureCard defender) {
+        return canAttackWith(attacker)
+                && defender != null
+                && getWaitingPlayer().getBattlefield().contains(defender);
+    }
+
     public String playCard(Card card) {
         if (winner != null) {
             return "La partida ya ha terminado.";
@@ -141,6 +147,54 @@ public class Game {
         }
         lastAction = currentPlayer.getName() + " ataca con " + creatureCard.getName()
                 + " y hace " + creatureCard.getPower() + " de dano a " + rival.getName() + ".";
+        return lastAction;
+    }
+
+    public String attackCreature(CreatureCard attacker, CreatureCard defender) {
+        if (winner != null) {
+            return "La partida ya ha terminado.";
+        }
+        if (attacker == null) {
+            return "Selecciona una criatura tuya para atacar.";
+        }
+        if (defender == null) {
+            return "Selecciona una criatura rival para combatir.";
+        }
+        if (!currentPlayer.getBattlefield().contains(attacker)) {
+            return "Solo puedes atacar con criaturas de tu mesa.";
+        }
+        Player rival = getWaitingPlayer();
+        if (!rival.getBattlefield().contains(defender)) {
+            return "Solo puedes atacar criaturas de la mesa rival.";
+        }
+        if (!attacker.isReadyToAttack()) {
+            return attacker.getName() + " aun no puede atacar este turno.";
+        }
+
+        boolean attackerDies = defender.getPower() >= attacker.getToughness();
+        boolean defenderDies = attacker.getPower() >= defender.getToughness();
+
+        attacker.consumeAttack();
+        if (attackerDies) {
+            currentPlayer.removeFromBattlefield(attacker);
+        }
+        if (defenderDies) {
+            rival.removeFromBattlefield(defender);
+        }
+
+        StringBuilder action = new StringBuilder(currentPlayer.getName())
+                .append(" hace combatir a ").append(attacker.getName())
+                .append(" contra ").append(defender.getName()).append(".");
+        if (defenderDies && attackerDies) {
+            action.append(" Ambas criaturas son destruidas.");
+        } else if (defenderDies) {
+            action.append(" ").append(defender.getName()).append(" es destruida.");
+        } else if (attackerDies) {
+            action.append(" ").append(attacker.getName()).append(" es destruida.");
+        } else {
+            action.append(" Ambas sobreviven al combate.");
+        }
+        lastAction = action.toString();
         return lastAction;
     }
 
