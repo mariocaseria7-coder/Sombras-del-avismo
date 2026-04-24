@@ -175,7 +175,7 @@ public class Main extends JFrame {
 
         previewImageLabel.setHorizontalAlignment(SwingConstants.CENTER);
         previewImageLabel.setVerticalAlignment(SwingConstants.CENTER);
-        previewImageLabel.setPreferredSize(new Dimension(420, 470));
+        previewImageLabel.setPreferredSize(new Dimension(560, 620));
         previewImageLabel.setBorder(BorderFactory.createLineBorder(new Color(90, 105, 120), 1, true));
 
         previewNameLabel.setForeground(TEXT_PRIMARY);
@@ -396,7 +396,7 @@ public class Main extends JFrame {
 
     private JPanel createCreatureCard(CreatureCard creature, boolean currentPlayersCard) {
         JPanel panel = cardShell(creature);
-        JLabel image = new JLabel(loadCardImage(creature, 128, 96));
+        JLabel image = new JLabel(loadCardImage(creature, 180, 140));
         image.setHorizontalAlignment(SwingConstants.CENTER);
 
         JLabel name = smallCenteredLabel(creature.getName(), true);
@@ -432,7 +432,7 @@ public class Main extends JFrame {
 
     private JPanel createHandCard(Card card) {
         JPanel panel = cardShell(card);
-        JLabel image = new JLabel(loadCardImage(card, 128, 96));
+        JLabel image = new JLabel(loadCardImage(card, 180, 140));
         image.setHorizontalAlignment(SwingConstants.CENTER);
 
         JLabel name = smallCenteredLabel(card.getName(), true);
@@ -466,8 +466,8 @@ public class Main extends JFrame {
 
     private JPanel createCollectionCard(Card card) {
         JPanel panel = cardShell(card);
-        panel.setPreferredSize(new Dimension(160, 230));
-        JLabel image = new JLabel(loadCardImage(card, 132, 100));
+        panel.setPreferredSize(new Dimension(220, 300));
+        JLabel image = new JLabel(loadCardImage(card, 190, 150));
         image.setHorizontalAlignment(SwingConstants.CENTER);
         JLabel name = smallCenteredLabel(card.getName(), true);
         JLabel meta = smallCenteredLabel(compactMeta(card), false);
@@ -501,7 +501,7 @@ public class Main extends JFrame {
     private JPanel cardShell(Card card) {
         JPanel panel = new JPanel(new BorderLayout(0, 8));
         panel.setBackground(CARD_BACKGROUND);
-        panel.setPreferredSize(new Dimension(160, 210));
+        panel.setPreferredSize(new Dimension(220, 260));
         panel.setBorder(BorderFactory.createCompoundBorder(
                 BorderFactory.createLineBorder(isSelectedCard(card) ? SELECTED_BORDER : CARD_BORDER, isSelectedCard(card) ? 2 : 1, true),
                 BorderFactory.createEmptyBorder(8, 8, 8, 8)
@@ -520,7 +520,7 @@ public class Main extends JFrame {
         if (selectedCard == null) {
             previewNameLabel.setText("Sin carta seleccionada");
             previewMetaLabel.setText("Selecciona una carta de tu mano o de tu mesa.");
-            previewHelpLabel.setText("<html><body style='width:420px'>Selecciona una carta de tu mano, tu mesa o la coleccion para verla grande. Si esta en tu mano podras jugarla, y si ya esta en tu mesa podras atacar cuando quede lista.</body></html>");
+            previewHelpLabel.setText("<html><body style='width:520px'>Selecciona una carta de tu mano, tu mesa o la coleccion para verla grande. Si esta en tu mano podras jugarla, y si ya esta en tu mesa podras atacar cuando quede lista.</body></html>");
             previewImageLabel.setIcon(null);
             previewImageLabel.setText("Sin carta");
             return;
@@ -528,8 +528,8 @@ public class Main extends JFrame {
 
         previewNameLabel.setText(selectedCard.getName());
         previewMetaLabel.setText(buildMeta(selectedCard));
-        previewHelpLabel.setText("<html><body style='width:420px'>" + buildPreviewHelp(selectedCard) + "<br><br><b>Descripcion:</b> " + selectedCard.getDescription() + "</body></html>");
-        previewImageLabel.setIcon(loadCardImage(selectedCard, 390, 450));
+        previewHelpLabel.setText("<html><body style='width:520px'>" + buildPreviewHelp(selectedCard) + "<br><br><b>Descripcion:</b> " + selectedCard.getDescription() + "</body></html>");
+        previewImageLabel.setIcon(loadCardImage(selectedCard, 540, 600));
         previewImageLabel.setText(previewImageLabel.getIcon() == null ? "Imagen no disponible" : "");
     }
 
