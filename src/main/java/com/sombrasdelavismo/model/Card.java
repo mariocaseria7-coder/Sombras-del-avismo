@@ -1,20 +1,14 @@
 package com.sombrasdelavismo.model;
 
-/**
- * Clase abstracta que representa una carta en el juego.
- * Todas las cartas tienen nombre, tipo, costo de mana y descripción.
- */
 public abstract class Card {
-    protected final String name;
-    protected final String type;
-    protected final int cost;
-    protected final String description;
-    protected final String imagePath;
+    private String name;
+    private int costMana;
+    private String description;
+    private String imagePath;
 
-    public Card(String name, String type, int cost, String description, String imagePath) {
+    public Card(String name, int costMana, String description, String imagePath) {
         this.name = name;
-        this.type = type;
-        this.cost = cost;
+        this.costMana = costMana;
         this.description = description;
         this.imagePath = imagePath;
     }
@@ -23,36 +17,40 @@ public abstract class Card {
         return name;
     }
 
-    public String getType() {
-        return type;
+    public void setName(String name) {
+        this.name = name;
     }
 
-    public int getCost() {
-        return cost;
+    public int getCostMana() {
+        return costMana;
+    }
+
+    public void setCostMana(int costMana) {
+        this.costMana = costMana;
     }
 
     public String getDescription() {
         return description;
     }
 
+    public void setDescription(String description) {
+        this.description = description;
+    }
+
     public String getImagePath() {
         return imagePath;
     }
 
-    /**
-     * Crea una copia independiente de la carta.
-     * Cada copia tiene su propio estado.
-     */
-    public abstract Card copy();
+    public void setImagePath(String imagePath) {
+        this.imagePath = imagePath;
+    }
 
-    /**
-     * Ejecuta el efecto de la carta cuando se juega.
-     * La lógica específica depende del tipo de carta.
-     */
-    public abstract void play();
+    public abstract void usar();
+
+    public abstract Card copy();
 
     @Override
     public String toString() {
-        return String.format("%s [%s - Costo: %d]", name, type, cost);
+        return name + " (Mana " + costMana + ")";
     }
 }

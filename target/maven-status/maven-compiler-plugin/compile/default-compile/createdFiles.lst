@@ -1,6 +1,12 @@
-com/sombrasdelavismo/CreatureCard.class
 com/sombrasdelavismo/Player.class
-com/sombrasdelavismo/Main.class
 com/sombrasdelavismo/SpellCard.class
+com/sombrasdelavismo/model/AIPlayer$1.class
+com/sombrasdelavismo/CreatureCard.class
+com/sombrasdelavismo/Tablero.class
+com/sombrasdelavismo/model/SpellType.class
+com/sombrasdelavismo/model/Game$1.class
+com/sombrasdelavismo/Main.class
+com/sombrasdelavismo/JuegoMagos.class
 com/sombrasdelavismo/Card.class
+com/sombrasdelavismo/model/Deck.class
 com/sombrasdelavismo/Game.class

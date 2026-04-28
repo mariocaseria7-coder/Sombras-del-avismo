@@ -1,14 +1,18 @@
 package com.sombrasdelavismo.model;
 
-/**
- * Clase que contiene la lógica central del juego.
- * Maneja turnos, juego de cartas, combate y condiciones de victoria.
- */
+import java.util.ArrayList;
+import java.util.List;
+
 public class Game {
-    private final Player player1;
-    private final Player player2;
+    private static final int INITIAL_HAND_SIZE = 4;
+
+    private Player player1;
+    private Player player2;
     private Player currentPlayer;
+    private Player waitingPlayer;
     private int turnNumber;
+    private int actionCounter;
+    private String phase;
     private String lastAction;
     private Player winner;
     private boolean gameFinished;
@@ -17,93 +21,150 @@ public class Game {
         this.player1 = player1;
         this.player2 = player2;
         this.currentPlayer = player1;
+        this.waitingPlayer = player2;
         this.turnNumber = 0;
-        this.lastAction = "Partida inicializada. En espera de comenzar...";
-        this.winner = null;
+        this.actionCounter = 0;
+        this.phase = "Preparacion";
+        this.lastAction = "La partida esta lista para comenzar.";
         this.gameFinished = false;
-    }
-
-    // ===== INICIALIZACIÓN Y TURNOS =====
-
-    /**
-     * Inicia la partida:
-     * - Reinicia ambos jugadores
-     * - Mezcla los mazos
-     * - Cada jugador roba 4 cartas
-     * - El primer jugador comienza el turno
-     */
-    public void startGame() {
-        player1.resetForNewGame();
-        player2.resetForNewGame();
-        player1.shuffleDeck();
-        player2.shuffleDeck();
-
-        for (int i = 0; i < 4; i++) {
-            player1.drawCard();
-            player2.drawCard();
-        }
-
-        turnNumber = 1;
-        currentPlayer = player1;
-        currentPlayer.startTurn();
-        lastAction = currentPlayer.getName() + " comienza la partida.";
-        gameFinished = false;
-    }
-
-    /**
-     * Avanza al siguiente turno.
-     * Cambia de jugador y restaura recursos.
-     */
-    public void nextTurn() {
-        if (gameFinished) {
-            return;
-        }
-
-        currentPlayer = (currentPlayer == player1) ? player2 : player1;
-        turnNumber++;
-        currentPlayer.startTurn();
-        lastAction = "Comienza el turno " + turnNumber + " de " + currentPlayer.getName() + ".";
-    }
-
-    // ===== ACCESORES BÁSICOS =====
-
-    public Player getCurrentPlayer() {
-        return currentPlayer;
     }
 
     public Player getPlayer1() {
         return player1;
     }
 
+    public void setPlayer1(Player player1) {
+        this.player1 = player1;
+    }
+
     public Player getPlayer2() {
         return player2;
     }
 
+    public void setPlayer2(Player player2) {
+        this.player2 = player2;
+    }
+
+    public Player getCurrentPlayer() {
+        return currentPlayer;
+    }
+
+    public void setCurrentPlayer(Player currentPlayer) {
+        this.currentPlayer = currentPlayer;
+    }
+
     public Player getWaitingPlayer() {
-        return currentPlayer == player1 ? player2 : player1;
+        return waitingPlayer;
+    }
+
+    public void setWaitingPlayer(Player waitingPlayer) {
+        this.waitingPlayer = waitingPlayer;
     }
 
     public int getTurnNumber() {
         return turnNumber;
     }
 
+    public void setTurnNumber(int turnNumber) {
+        this.turnNumber = turnNumber;
+    }
+
+    public int getActionCounter() {
+        return actionCounter;
+    }
+
+    public void setActionCounter(int actionCounter) {
+        this.actionCounter = actionCounter;
+    }
+
+    public String getPhase() {
+        return phase;
+    }
+
+    public void setPhase(String phase) {
+        this.phase = phase;
+    }
+
     public String getLastAction() {
         return lastAction;
+    }
+
+    public void setLastAction(String lastAction) {
+        this.lastAction = lastAction;
     }
 
     public Player getWinner() {
         return winner;
     }
 
+    public void setWinner(Player winner) {
+        this.winner = winner;
+    }
+
     public boolean isGameFinished() {
         return gameFinished;
     }
 
-    // ===== VALIDACIONES DE ACCIONES =====
+    public void setGameFinished(boolean gameFinished) {
+        this.gameFinished = gameFinished;
+    }
 
-    /**
-     * Verifica si una carta puede ser jugada.
-     */
+    public void startGame() {
+        player1.resetForNewGame();
+        player2.resetForNewGame();
+        player1.shuffleDeck();
+        player2.shuffleDeck();
+
+        for (int i = 0; i < INITIAL_HAND_SIZE; i++) {
+            if (!drawWithoutFatigueLoss(player1) || !drawWithoutFatigueLoss(player2)) {
+                return;
+            }
+        }
+
+        currentPlayer = player1;
+        waitingPlayer = player2;
+        turnNumber = 1;
+        actionCounter = 0;
+        executeStartPhase();
+    }
+
+    public void nextTurn() {
+        if (gameFinished) {
+            return;
+        }
+        Player previous = currentPlayer;
+        currentPlayer = waitingPlayer;
+        waitingPlayer = previous;
+        turnNumber++;
+        actionCounter = 0;
+        executeStartPhase();
+    }
+
+    public void executeStartPhase() {
+        if (gameFinished) {
+            return;
+        }
+
+        phase = "Inicio";
+        currentPlayer.increaseMana();
+        currentPlayer.refillMana();
+
+        Card drawnCard = currentPlayer.drawCard();
+        if (drawnCard == null) {
+            loseByFatigue(currentPlayer);
+            return;
+        }
+
+        phase = "Mantenimiento";
+        for (CreatureCard creature : currentPlayer.getCreatures()) {
+            creature.enderezarParaTurnoPropio();
+        }
+
+        phase = "Accion";
+        lastAction = currentPlayer.getName() + " inicia el turno " + turnNumber
+                + ", roba " + drawnCard.getName() + " y prepara sus criaturas.";
+    }
+
     public boolean canPlaySelectedCard(Card card) {
         return !gameFinished
                 && card != null
@@ -111,250 +172,242 @@ public class Game {
                 && currentPlayer.canPlay(card);
     }
 
-    /**
-     * Verifica si una criatura puede atacar directamente.
-     */
-    public boolean canAttackDirectly(CreatureCard creatureCard) {
-        return !gameFinished
-                && creatureCard != null
-                && currentPlayer.getBattlefield().contains(creatureCard)
-                && creatureCard.isReadyToAttack();
-    }
-
-    /**
-     * Verifica si se puede hacer combate entre dos criaturas.
-     */
-    public boolean canAttackTarget(CreatureCard attacker, CreatureCard defender) {
-        return canAttackDirectly(attacker)
-                && defender != null
-                && getWaitingPlayer().getBattlefield().contains(defender);
-    }
-
-    // ===== ACCIONES DE JUEGO =====
-
-    /**
-     * El jugador actual juega una carta de su mano.
-     */
     public String playCard(Card card) {
         if (gameFinished) {
-            lastAction = "La partida ya ha terminado.";
-            return lastAction;
+            return "La partida ya ha terminado.";
         }
-
         if (card == null) {
-            lastAction = "Selecciona una carta antes de jugar.";
-            return lastAction;
+            return "Selecciona una carta valida.";
         }
-
         if (!currentPlayer.getHand().contains(card)) {
-            lastAction = "Solo puedes jugar cartas de tu mano.";
-            return lastAction;
+            return "Solo puedes jugar cartas de tu mano.";
         }
-
         if (!currentPlayer.canPlay(card)) {
-            lastAction = "No tienes mana suficiente para jugar " + card.getName() 
-                    + ". Costo: " + card.getCost() + ", Mana disponible: " + currentPlayer.getMana();
-            return lastAction;
+            return "No tienes mana suficiente para jugar " + card.getName() + ".";
         }
 
-        // Gastar mana
-        currentPlayer.spendMana(card.getCost());
+        currentPlayer.spendMana(card.getCostMana());
         currentPlayer.removeFromHand(card);
+        actionCounter++;
 
         if (card instanceof CreatureCard creatureCard) {
-            // Jugar criatura
-            creatureCard.markPlayedThisTurn();
-            currentPlayer.addToBattlefield(creatureCard);
-            card.play();
-            lastAction = currentPlayer.getName() + " invoca a " + card.getName() + ".";
+            creatureCard.prepararInvocacion();
+            currentPlayer.addCreature(creatureCard);
+            creatureCard.usar();
+            lastAction = currentPlayer.getName() + " invoca a " + creatureCard.getName() + ".";
             return lastAction;
         }
 
-        if (card instanceof SpellCard spellCard) {
-            // Resolver hechizo
-            resolveSpell(spellCard);
-            card.play();
-            return lastAction;
-        }
-
-        lastAction = "Tipo de carta no reconocido.";
+        SpellCard spellCard = (SpellCard) card;
+        resolveSpell(spellCard, null);
+        currentPlayer.getDeck().sendToGraveyard(spellCard);
+        spellCard.usar();
         return lastAction;
     }
 
-    /**
-     * El jugador actual ataca directamente al rival.
-     */
-    public String attackDirectly(CreatureCard creatureCard) {
-        if (gameFinished) {
-            lastAction = "La partida ya ha terminado.";
-            return lastAction;
-        }
-
-        if (creatureCard == null) {
-            lastAction = "Selecciona una criatura para atacar.";
-            return lastAction;
-        }
-
-        if (!currentPlayer.getBattlefield().contains(creatureCard)) {
-            lastAction = "Solo puedes atacar con criaturas de tu mesa.";
-            return lastAction;
-        }
-
-        if (!creatureCard.isReadyToAttack()) {
-            lastAction = creatureCard.getName() + " aún no puede atacar este turno.";
-            return lastAction;
-        }
-
-        Player rival = getWaitingPlayer();
-        int damage = creatureCard.getPower();
-        rival.takeDamage(damage);
-        creatureCard.consumeAttack();
-
-        lastAction = currentPlayer.getName() + " ataca con " + creatureCard.getName()
-                + " (" + damage + " daño) a " + rival.getName() + ". Vida: " + rival.getLife();
-
-        updateWinner();
-        return lastAction;
+    public boolean canAttackWith(CreatureCard attacker) {
+        return !gameFinished
+                && attacker != null
+                && currentPlayer.getCreatures().contains(attacker)
+                && attacker.isCanAttack()
+                && !attacker.isTapped();
     }
 
-    /**
-     * Hace combate entre dos criaturas.
-     */
+    public boolean canAttackDirectly(CreatureCard attacker) {
+        return canAttackWith(attacker);
+    }
+
+    public boolean canAttackTarget(CreatureCard attacker, CreatureCard defender) {
+        return canAttackWith(attacker)
+                && defender != null
+                && waitingPlayer.getCreatures().contains(defender)
+                && defender.isCanDefend();
+    }
+
+    public List<CreatureCard> getAvailableAttackers() {
+        List<CreatureCard> attackers = new ArrayList<>();
+        for (CreatureCard creature : currentPlayer.getCreatures()) {
+            if (canAttackWith(creature)) {
+                attackers.add(creature);
+            }
+        }
+        return attackers;
+    }
+
+    public List<CreatureCard> getAvailableBlockers() {
+        List<CreatureCard> blockers = new ArrayList<>();
+        for (CreatureCard creature : waitingPlayer.getCreatures()) {
+            if (creature.isCanDefend() && !creature.isTapped()) {
+                blockers.add(creature);
+            }
+        }
+        return blockers;
+    }
+
+    public String attackDirectly(CreatureCard attacker) {
+        return resolveAttack(attacker, null);
+    }
+
     public String attackCreature(CreatureCard attacker, CreatureCard defender) {
+        return resolveAttack(attacker, defender);
+    }
+
+    public String resolveAttack(CreatureCard attacker, CreatureCard blocker) {
         if (gameFinished) {
-            lastAction = "La partida ya ha terminado.";
+            return "La partida ya ha terminado.";
+        }
+        if (!canAttackWith(attacker)) {
+            return "La criatura seleccionada no puede atacar.";
+        }
+
+        phase = "Combate";
+        actionCounter++;
+        attacker.girarPorAtaque();
+
+        if (blocker == null) {
+            attacker.atacar(waitingPlayer);
+            lastAction = currentPlayer.getName() + " ataca con " + attacker.getName()
+                    + " directamente a " + waitingPlayer.getName() + " por " + attacker.getAttack() + " de daño.";
+            updateWinnerByLife();
             return lastAction;
         }
 
-        if (attacker == null) {
-            lastAction = "Selecciona una criatura tuya para atacar.";
-            return lastAction;
+        if (!waitingPlayer.getCreatures().contains(blocker) || !blocker.isCanDefend() || blocker.isTapped()) {
+            return "La criatura defensora no puede bloquear.";
         }
 
-        if (defender == null) {
-            lastAction = "Selecciona una criatura rival para combatir.";
-            return lastAction;
-        }
+        attacker.atacar(blocker);
+        blocker.defender(attacker);
+        moveDeadCreaturesToGraveyard();
 
-        if (!currentPlayer.getBattlefield().contains(attacker)) {
-            lastAction = "Solo puedes atacar con criaturas de tu mesa.";
-            return lastAction;
-        }
+        StringBuilder result = new StringBuilder();
+        result.append(currentPlayer.getName())
+                .append(" ataca con ")
+                .append(attacker.getName())
+                .append(" y ")
+                .append(waitingPlayer.getName())
+                .append(" bloquea con ")
+                .append(blocker.getName())
+                .append(".");
 
-        Player rival = getWaitingPlayer();
-        if (!rival.getBattlefield().contains(defender)) {
-            lastAction = "Solo puedes atacar criaturas de la mesa rival.";
-            return lastAction;
-        }
-
-        if (!attacker.isReadyToAttack()) {
-            lastAction = attacker.getName() + " aún no puede atacar este turno.";
-            return lastAction;
-        }
-
-        // Resolver combate
-        boolean attackerDies = defender.getPower() >= attacker.getToughness();
-        boolean defenderDies = attacker.getPower() >= defender.getToughness();
-
-        attacker.consumeAttack();
-
-        if (attackerDies) {
-            currentPlayer.removeFromBattlefield(attacker);
-            currentPlayer.addToGraveyard(attacker);
-        }
-
-        if (defenderDies) {
-            rival.removeFromBattlefield(defender);
-            rival.addToGraveyard(defender);
-        }
-
-        StringBuilder action = new StringBuilder(currentPlayer.getName())
-                .append(" combate: ").append(attacker.getName())
-                .append(" [").append(attacker.getPower()).append("/").append(attacker.getToughness()).append("]")
-                .append(" vs ").append(defender.getName())
-                .append(" [").append(defender.getPower()).append("/").append(defender.getToughness()).append("]");
-
-        if (defenderDies && attackerDies) {
-            action.append(" → Ambas criaturas son destruidas.");
-        } else if (defenderDies) {
-            action.append(" → ").append(defender.getName()).append(" es destruida.");
-        } else if (attackerDies) {
-            action.append(" → ").append(attacker.getName()).append(" es destruida.");
+        if (!currentPlayer.getCreatures().contains(attacker) && !waitingPlayer.getCreatures().contains(blocker)) {
+            result.append(" Ambas criaturas mueren.");
+        } else if (!currentPlayer.getCreatures().contains(attacker)) {
+            result.append(" ").append(attacker.getName()).append(" muere.");
+        } else if (!waitingPlayer.getCreatures().contains(blocker)) {
+            result.append(" ").append(blocker.getName()).append(" muere.");
         } else {
-            action.append(" → Ambas sobreviven al combate.");
+            result.append(" Ambas criaturas sobreviven.");
         }
 
-        lastAction = action.toString();
+        lastAction = result.toString();
         return lastAction;
     }
 
-    // ===== RESOLUCIÓN DE HECHIZOS =====
-
-    /**
-     * Resuelve los efectos de un hechizo.
-     */
-    private void resolveSpell(SpellCard spellCard) {
-        Player rival = getWaitingPlayer();
-
-        // Aplicar daño
-        if (spellCard.getDamage() > 0) {
-            rival.takeDamage(spellCard.getDamage());
+    public String castBuffSpell(SpellCard spellCard, CreatureCard target) {
+        if (spellCard == null || target == null) {
+            return "Debes seleccionar hechizo y objetivo.";
         }
-
-        // Aplicar curación
-        if (spellCard.getHealing() > 0) {
-            currentPlayer.heal(spellCard.getHealing());
-        }
-
-        // Robar cartas
-        for (int i = 0; i < spellCard.getCardsToDraw(); i++) {
-            currentPlayer.drawCard();
-        }
-
-        updateWinner();
-
-        StringBuilder action = new StringBuilder(currentPlayer.getName())
-                .append(" lanza ").append(spellCard.getName());
-
-        if (spellCard.getDamage() > 0) {
-            action.append(" → ").append(spellCard.getDamage()).append(" daño a ").append(rival.getName());
-        }
-        if (spellCard.getHealing() > 0) {
-            action.append(" → Cura ").append(spellCard.getHealing()).append(" vidas");
-        }
-        if (spellCard.getCardsToDraw() > 0) {
-            action.append(" → Roba ").append(spellCard.getCardsToDraw()).append(" carta");
-            if (spellCard.getCardsToDraw() > 1) action.append("s");
-        }
-
-        lastAction = action.toString();
+        resolveSpell(spellCard, target);
+        currentPlayer.getDeck().sendToGraveyard(spellCard);
+        return lastAction;
     }
 
-    // ===== CONDICIONES DE VICTORIA =====
+    private void resolveSpell(SpellCard spellCard, CreatureCard target) {
+        switch (spellCard.getType()) {
+            case DAMAGE -> waitingPlayer.receiveDamage(spellCard.getValue());
+            case HEAL -> currentPlayer.heal(spellCard.getValue());
+            case DRAW -> {
+                for (int i = 0; i < spellCard.getDrawCount(); i++) {
+                    Card draw = currentPlayer.drawCard();
+                    if (draw == null) {
+                        loseByFatigue(currentPlayer);
+                        return;
+                    }
+                }
+            }
+            case BUFF -> {
+                CreatureCard objective = target != null ? target : chooseDefaultBuffTarget();
+                if (objective != null) {
+                    objective.aplicarBuff(spellCard.getBuffAttack(), spellCard.getBuffLife());
+                }
+            }
+        }
 
-    /**
-     * Verifica si alguien ha ganado la partida.
-     */
-    private void updateWinner() {
-        if (player1.getLife() <= 0 && player2.getLife() <= 0) {
-            // Empate
-            winner = null;
-            lastAction = "¡EMPATE! Ambos jugadores quedaron sin vida.";
-            gameFinished = true;
-        } else if (player1.getLife() <= 0) {
+        updateWinnerByLife();
+        if (gameFinished) {
+            return;
+        }
+
+        lastAction = switch (spellCard.getType()) {
+            case DAMAGE -> currentPlayer.getName() + " lanza " + spellCard.getName()
+                    + " e inflige " + spellCard.getValue() + " de daño.";
+            case HEAL -> currentPlayer.getName() + " lanza " + spellCard.getName()
+                    + " y recupera " + spellCard.getValue() + " de vida.";
+            case DRAW -> currentPlayer.getName() + " lanza " + spellCard.getName()
+                    + " y roba " + spellCard.getDrawCount() + " cartas.";
+            case BUFF -> currentPlayer.getName() + " lanza " + spellCard.getName()
+                    + " para reforzar a una criatura aliada.";
+        };
+    }
+
+    private CreatureCard chooseDefaultBuffTarget() {
+        if (currentPlayer.getCreatures().isEmpty()) {
+            return null;
+        }
+        return currentPlayer.getCreatures().get(0);
+    }
+
+    private boolean drawWithoutFatigueLoss(Player player) {
+        Card drawnCard = player.drawCard();
+        if (drawnCard == null) {
+            loseByFatigue(player);
+            return false;
+        }
+        return true;
+    }
+
+    private void moveDeadCreaturesToGraveyard() {
+        List<CreatureCard> currentDead = new ArrayList<>();
+        for (CreatureCard creature : currentPlayer.getCreatures()) {
+            if (creature.estaMuerta()) {
+                currentDead.add(creature);
+            }
+        }
+
+        List<CreatureCard> waitingDead = new ArrayList<>();
+        for (CreatureCard creature : waitingPlayer.getCreatures()) {
+            if (creature.estaMuerta()) {
+                waitingDead.add(creature);
+            }
+        }
+
+        for (CreatureCard dead : currentDead) {
+            currentPlayer.removeCreature(dead);
+            currentPlayer.getDeck().sendToGraveyard(dead);
+        }
+
+        for (CreatureCard dead : waitingDead) {
+            waitingPlayer.removeCreature(dead);
+            waitingPlayer.getDeck().sendToGraveyard(dead);
+        }
+    }
+
+    private void loseByFatigue(Player player) {
+        gameFinished = true;
+        winner = player == player1 ? player2 : player1;
+        lastAction = "Fatiga magica: " + player.getName() + " intento robar con el mazo vacio.";
+    }
+
+    private void updateWinnerByLife() {
+        if (player1.getLife() <= 0) {
             winner = player2;
-            lastAction = "¡" + player2.getName() + " gana la partida!";
             gameFinished = true;
+            lastAction = player2.getName() + " gana porque " + player1.getName() + " ha caido a 0 vidas.";
         } else if (player2.getLife() <= 0) {
             winner = player1;
-            lastAction = "¡" + player1.getName() + " gana la partida!";
             gameFinished = true;
+            lastAction = player1.getName() + " gana porque " + player2.getName() + " ha caido a 0 vidas.";
         }
-    }
-
-    @Override
-    public String toString() {
-        return String.format("Turno %d - %s\nP1: %s | P2: %s", 
-            turnNumber, currentPlayer.getName(), player1, player2);
     }
 }

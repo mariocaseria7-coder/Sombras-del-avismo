@@ -1,5 +1,10 @@
 package com.sombrasdelavismo;
 
+import com.sombrasdelavismo.model.CreatureCard;
+import com.sombrasdelavismo.model.Game;
+import com.sombrasdelavismo.model.Player;
+import com.sombrasdelavismo.model.SpellCard;
+import com.sombrasdelavismo.model.SpellType;
 import org.junit.jupiter.api.Test;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
@@ -15,14 +20,14 @@ class GameTest {
         Player player2 = new Player("Bob");
         CreatureCard wolf = new CreatureCard("Wolf", 1, 3, 3, "Criatura", "cards/wolf.jpg");
 
-        player1.addCardToDeck(wolf);
-        for (int i = 0; i < 4; i++) {
-            player1.addCardToDeck(new SpellCard("Relleno " + i, 1, "Nada", 0, 0, 0, "cards/fill.jpg"));
-            player2.addCardToDeck(new SpellCard("Relleno rival " + i, 1, "Nada", 0, 0, 0, "cards/fill.jpg"));
+        for (int i = 0; i < 7; i++) {
+            player1.addCardToDeck(new SpellCard("Relleno " + i, 1, SpellType.HEAL, 0, "Nada", "cards/fill.jpg"));
+            player2.addCardToDeck(new SpellCard("Relleno rival " + i, 1, SpellType.HEAL, 0, "Nada", "cards/fill.jpg"));
         }
 
         Game game = new Game(player1, player2);
         game.startGame();
+        player1.getHand().add(wolf);
 
         assertTrue(game.canPlaySelectedCard(wolf));
         game.playCard(wolf);
@@ -38,53 +43,53 @@ class GameTest {
     void spellConsumesManaAndDamagesRival() {
         Player player1 = new Player("Alice");
         Player player2 = new Player("Bob");
-        SpellCard bolt = new SpellCard("Bolt", 1, "Dano", 4, 0, 0, "cards/bolt.jpg");
+        SpellCard bolt = new SpellCard("Bolt", 1, SpellType.DAMAGE, 4, "Dano", "cards/bolt.jpg");
 
-        player1.addCardToDeck(bolt);
-        for (int i = 0; i < 4; i++) {
+        for (int i = 0; i < 7; i++) {
             player1.addCardToDeck(new CreatureCard("Aliado " + i, 1, 1, 1, "Criatura", "cards/a.jpg"));
             player2.addCardToDeck(new CreatureCard("Rival " + i, 1, 1, 1, "Criatura", "cards/b.jpg"));
         }
 
         Game game = new Game(player1, player2);
         game.startGame();
+        player1.getHand().add(bolt);
 
         int lifeBefore = player2.getLife();
-        int manaBefore = player1.getMana();
+        int manaBefore = player1.getCurrentMana();
         String result = game.playCard(bolt);
 
         assertEquals(lifeBefore - 4, player2.getLife());
-        assertEquals(manaBefore - 1, player1.getMana());
+        assertEquals(manaBefore - 1, player1.getCurrentMana());
         assertTrue(result.contains("Bolt"));
     }
 
     @Test
-    void creatureCombatCanDestroyBothCreatures() {
+    void blockedCombatDoesNotPassExcessDamageToPlayer() {
         Player player1 = new Player("Alice");
         Player player2 = new Player("Bob");
-        CreatureCard attacker = new CreatureCard("Tigre", 1, 3, 2, "Criatura", "cards/tiger.jpg");
-        CreatureCard defender = new CreatureCard("Oso", 1, 2, 3, "Criatura", "cards/bear.jpg");
+        CreatureCard attacker = new CreatureCard("Tigre", 1, 5, 3, "Criatura", "cards/tiger.jpg");
+        CreatureCard blocker = new CreatureCard("Oso", 1, 2, 1, "Criatura", "cards/bear.jpg");
 
-        player1.addCardToDeck(attacker);
-        player2.addCardToDeck(defender);
-        for (int i = 0; i < 4; i++) {
-            player1.addCardToDeck(new SpellCard("Relleno " + i, 1, "Nada", 0, 0, 0, "cards/fill.jpg"));
-            player2.addCardToDeck(new SpellCard("Relleno rival " + i, 1, "Nada", 0, 0, 0, "cards/fill.jpg"));
+        for (int i = 0; i < 7; i++) {
+            player1.addCardToDeck(new SpellCard("Relleno " + i, 1, SpellType.HEAL, 0, "Nada", "cards/fill.jpg"));
+            player2.addCardToDeck(new SpellCard("Relleno rival " + i, 1, SpellType.HEAL, 0, "Nada", "cards/fill.jpg"));
         }
 
         Game game = new Game(player1, player2);
         game.startGame();
+        player1.getHand().add(attacker);
         game.playCard(attacker);
         game.nextTurn();
-        game.playCard(defender);
+        player2.getHand().add(blocker);
+        game.playCard(blocker);
         game.nextTurn();
 
-        assertTrue(game.canAttackTarget(attacker, defender));
-        String result = game.attackCreature(attacker, defender);
+        int rivalLifeBefore = player2.getLife();
+        String result = game.attackCreature(attacker, blocker);
 
-        assertFalse(player1.getBattlefield().contains(attacker));
-        assertFalse(player2.getBattlefield().contains(defender));
-        assertTrue(result.contains("Ambas criaturas son destruidas"));
+        assertFalse(player2.getCreatures().contains(blocker));
+        assertEquals(rivalLifeBefore, player2.getLife());
+        assertTrue(result.contains("bloquea"));
     }
 
     @Test
@@ -92,12 +97,12 @@ class GameTest {
         CreatureCard original = new CreatureCard("Bestia", 2, 3, 2, "Criatura", "cards/beast.jpg");
         CreatureCard copy = (CreatureCard) original.copy();
 
-        original.markPlayedThisTurn();
-        original.startOwnerTurn();
-        original.consumeAttack();
+        original.prepararInvocacion();
+        original.enderezarParaTurnoPropio();
+        original.girarPorAtaque();
 
         assertNotSame(original, copy);
-        assertFalse(copy.isReadyToAttack());
-        assertTrue(copy.isJustPlayed());
+        assertFalse(copy.isCanAttack());
+        assertTrue(copy.isSummoningSickness());
     }
 }

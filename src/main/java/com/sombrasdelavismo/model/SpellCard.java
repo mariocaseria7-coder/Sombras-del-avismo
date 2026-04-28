@@ -1,51 +1,93 @@
 package com.sombrasdelavismo.model;
 
-/**
- * Representa una carta de hechizo en el juego.
- * Los hechizos tienen efectos instantáneos como daño, curación o robar cartas.
- */
 public class SpellCard extends Card {
-    private final String effect;        // Descripción del efecto
-    private final int damage;           // Daño que causa el hechizo
-    private final int healing;          // Curación que proporciona
-    private final int cardsToDraw;      // Cartas que se roban
+    private SpellType type;
+    private int value;
+    private int drawCount;
+    private int buffAttack;
+    private int buffLife;
 
-    public SpellCard(String name, int cost, String effect, int damage, int healing, int cardsToDraw, String imagePath) {
-        super(name, "Spell", cost, effect, imagePath);
-        this.effect = effect;
-        this.damage = damage;
-        this.healing = healing;
-        this.cardsToDraw = cardsToDraw;
+    public SpellCard(String name, int costMana, SpellType type, int value, String description, String imagePath) {
+        this(name, costMana, type, value, 0, 0, description, imagePath);
     }
 
-    public String getEffect() {
-        return effect;
+    public SpellCard(
+            String name,
+            int costMana,
+            SpellType type,
+            int value,
+            int buffAttack,
+            int buffLife,
+            String description,
+            String imagePath) {
+        super(name, costMana, description, imagePath);
+        this.type = type;
+        this.value = value;
+        this.drawCount = type == SpellType.DRAW ? value : 0;
+        this.buffAttack = buffAttack;
+        this.buffLife = buffLife;
     }
 
-    public int getDamage() {
-        return damage;
+    public SpellType getType() {
+        return type;
     }
 
-    public int getHealing() {
-        return healing;
+    public void setType(SpellType type) {
+        this.type = type;
     }
 
-    public int getCardsToDraw() {
-        return cardsToDraw;
+    public int getValue() {
+        return value;
+    }
+
+    public void setValue(int value) {
+        this.value = value;
+    }
+
+    public int getDrawCount() {
+        return drawCount;
+    }
+
+    public void setDrawCount(int drawCount) {
+        this.drawCount = drawCount;
+    }
+
+    public int getBuffAttack() {
+        return buffAttack;
+    }
+
+    public void setBuffAttack(int buffAttack) {
+        this.buffAttack = buffAttack;
+    }
+
+    public int getBuffLife() {
+        return buffLife;
+    }
+
+    public void setBuffLife(int buffLife) {
+        this.buffLife = buffLife;
+    }
+
+    @Override
+    public void usar() {
+        // La resolucion real se gestiona desde Game.
     }
 
     @Override
     public Card copy() {
-        return new SpellCard(name, cost, effect, damage, healing, cardsToDraw, imagePath);
-    }
-
-    @Override
-    public void play() {
-        // No side effects needed here; resolution happens in Game.
+        return new SpellCard(
+                getName(),
+                getCostMana(),
+                type,
+                value,
+                buffAttack,
+                buffLife,
+                getDescription(),
+                getImagePath());
     }
 
     @Override
     public String toString() {
-        return String.format("%s - %s (Costo: %d)", name, effect, cost);
+        return getName() + " [" + type + " " + value + "] Mana " + getCostMana();
     }
 }

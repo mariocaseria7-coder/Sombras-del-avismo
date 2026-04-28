@@ -1,134 +1,154 @@
-package com.sombrasdelavismo.model;package com.sombrasdelavismo.model;
+package com.sombrasdelavismo.model;
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-}    }        return String.format("%s - %s (Costo: %d)", name, effect, cost);    public String toString() {    @Override    }        // No side effects needed here; resolution happens in Game.    public void play() {    @Override    }        return new SpellCard(name, cost, effect, damage, healing, cardsToDraw, imagePath);    public Card copy() {    @Override    }        return cardsToDraw;    public int getCardsToDraw() {    }        return healing;    public int getHealing() {    }        return damage;    public int getDamage() {    }        return effect;    public String getEffect() {    }        this.cardsToDraw = cardsToDraw;        this.healing = healing;        this.damage = damage;        this.effect = effect;        super(name, "Spell", cost, effect, imagePath);    public SpellCard(String name, int cost, String effect, int damage, int healing, int cardsToDraw, String imagePath) {    private final int cardsToDraw;      // Cartas que se roban    private final int healing;          // Curación que proporciona    private final int damage;           // Daño que causa el hechizo    private final String effect;        // Descripción del efectopublic class SpellCard extends Card { */ * Los hechizos tienen efectos instantáneos como daño, curación o robar cartas. * Representa una carta de hechizo en el juego./**
-/**
- * Representa una carta de criatura en el juego.
- * Posee poder (ataque) y resistencia (defensa).
- * Las criaturas pueden atacar, pero necesitan esperar un turno después de ser invocadas.
- */
 public class CreatureCard extends Card {
-    private final int power;      // Daño que hace la criatura al atacar
-    private final int toughness;  // Resistencia de la criatura
-    private boolean readyToAttack;  // Puede atacar este turno
-    private boolean justPlayed;     // Fue invocada este turno
+    private int attack;
+    private int life;
+    private int maxLife;
+    private boolean canAttack;
+    private boolean canDefend;
+    private boolean tapped;
+    private boolean summoningSickness;
 
-    public CreatureCard(String name, int cost, int power, int toughness, String description, String imagePath) {
-        super(name, "Creature", cost, description, imagePath);
-        this.power = power;
-        this.toughness = toughness;
-        this.readyToAttack = false;
-        this.justPlayed = true;
+    public CreatureCard(String name, int costMana, int attack, int life, String description, String imagePath) {
+        super(name, costMana, description, imagePath);
+        this.attack = attack;
+        this.life = life;
+        this.maxLife = life;
+        this.canAttack = false;
+        this.canDefend = true;
+        this.tapped = false;
+        this.summoningSickness = true;
     }
 
-    public int getPower() {
-        return power;
+    public int getAttack() {
+        return attack;
     }
 
-    public int getToughness() {
-        return toughness;
+    public void setAttack(int attack) {
+        this.attack = attack;
     }
 
-    public boolean isReadyToAttack() {
-        return readyToAttack;
+    public int getLife() {
+        return life;
     }
 
-    public boolean isJustPlayed() {
-        return justPlayed;
+    public void setLife(int life) {
+        this.life = Math.max(0, life);
     }
 
-    /**
-     * Marca que la criatura fue invocada este turno.
-     * No puede atacar hasta el siguiente turno del propietario.
-     */
-    public void markPlayedThisTurn() {
-        readyToAttack = false;
-        justPlayed = true;
+    public int getMaxLife() {
+        return maxLife;
     }
 
-    /**
-     * Al comienzo del turno del propietario:
-     * - Si fue invocada este turno, ahora puede atacar próximamente
-     * - En caso contrario, está lista para atacar
-     */
-    public void startOwnerTurn() {
-        if (justPlayed) {
-            justPlayed = false;
-            readyToAttack = false; // Espera hasta el próximo turno
+    public void setMaxLife(int maxLife) {
+        this.maxLife = maxLife;
+    }
+
+    public boolean isCanAttack() {
+        return canAttack;
+    }
+
+    public void setCanAttack(boolean canAttack) {
+        this.canAttack = canAttack;
+    }
+
+    public boolean isCanDefend() {
+        return canDefend;
+    }
+
+    public void setCanDefend(boolean canDefend) {
+        this.canDefend = canDefend;
+    }
+
+    public boolean isTapped() {
+        return tapped;
+    }
+
+    public void setTapped(boolean tapped) {
+        this.tapped = tapped;
+        this.canDefend = !tapped;
+    }
+
+    public boolean isSummoningSickness() {
+        return summoningSickness;
+    }
+
+    public void setSummoningSickness(boolean summoningSickness) {
+        this.summoningSickness = summoningSickness;
+    }
+
+    public void prepararInvocacion() {
+        this.canAttack = false;
+        this.canDefend = true;
+        this.tapped = false;
+        this.summoningSickness = true;
+    }
+
+    public void enderezarParaTurnoPropio() {
+        if (summoningSickness) {
+            summoningSickness = false;
+            canAttack = true;
         } else {
-            readyToAttack = true;
+            canAttack = true;
+        }
+        tapped = false;
+        canDefend = true;
+    }
+
+    public void girarPorAtaque() {
+        tapped = true;
+        canAttack = false;
+        canDefend = false;
+    }
+
+    public void atacar(CreatureCard objetivo) {
+        if (objetivo != null) {
+            objetivo.recibirDanio(attack);
         }
     }
 
-    /**
-     * Consume el ataque de la criatura.
-     * No podrá atacar nuevamente hasta el próximo turno.
-     */
-    public void consumeAttack() {
-        readyToAttack = false;
+    public void atacar(Player objetivo) {
+        if (objetivo != null) {
+            objetivo.receiveDamage(attack);
+        }
+    }
+
+    public void defender(CreatureCard atacante) {
+        if (atacante != null) {
+            atacante.recibirDanio(attack);
+        }
+    }
+
+    public void recibirDanio(int amount) {
+        life = Math.max(0, life - amount);
+    }
+
+    public void restaurarVidaCompleta() {
+        this.life = this.maxLife;
+    }
+
+    public boolean estaMuerta() {
+        return life <= 0;
+    }
+
+    public void aplicarBuff(int attackBonus, int lifeBonus) {
+        attack += attackBonus;
+        maxLife += lifeBonus;
+        life += lifeBonus;
+    }
+
+    @Override
+    public void usar() {
+        // La resolucion real se gestiona desde Game.
     }
 
     @Override
     public Card copy() {
-        return new CreatureCard(name, cost, power, toughness, description, imagePath);
-    }
-
-    @Override
-    public void play() {
-        // No side effects needed here; resolution happens in Game.
+        return new CreatureCard(getName(), getCostMana(), attack, maxLife, getDescription(), getImagePath());
     }
 
     @Override
     public String toString() {
-        return String.format("%s [%s/%s] (Costo: %d)", name, power, toughness, cost);
+        return getName() + " [" + attack + "/" + life + "] Mana " + getCostMana();
     }
 }
