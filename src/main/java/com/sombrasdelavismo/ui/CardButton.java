@@ -2,6 +2,7 @@ package com.sombrasdelavismo.ui;
 
 import java.awt.BasicStroke;
 import java.awt.Color;
+import java.awt.Cursor;
 import java.awt.Dimension;
 import java.awt.Font;
 import java.awt.FontMetrics;
@@ -20,6 +21,7 @@ import javax.swing.JToggleButton;
 
 public class CardButton extends JToggleButton {
     private static final Map<String, BufferedImage> IMAGE_CACHE = new HashMap<>();
+    private static final Dimension DEFAULT_SIZE = new Dimension(172, 252);
 
     private final String title;
     private final int manaCost;
@@ -39,6 +41,19 @@ public class CardButton extends JToggleButton {
             Color accent,
             String imagePath,
             boolean hiddenCard) {
+        this(title, manaCost, typeLabel, description, footer, accent, imagePath, hiddenCard, DEFAULT_SIZE);
+    }
+
+    public CardButton(
+            String title,
+            int manaCost,
+            String typeLabel,
+            String description,
+            String footer,
+            Color accent,
+            String imagePath,
+            boolean hiddenCard,
+            Dimension size) {
         this.title = title;
         this.manaCost = manaCost;
         this.typeLabel = typeLabel;
@@ -52,8 +67,10 @@ public class CardButton extends JToggleButton {
         setFocusPainted(false);
         setBorderPainted(false);
         setContentAreaFilled(false);
-        setPreferredSize(new Dimension(155, 225));
-        setMinimumSize(new Dimension(155, 225));
+        setCursor(Cursor.getPredefinedCursor(Cursor.HAND_CURSOR));
+        setPreferredSize(size);
+        setMinimumSize(size);
+        setMaximumSize(size);
         setToolTipText(buildTooltip());
     }
 
@@ -62,72 +79,113 @@ public class CardButton extends JToggleButton {
         Graphics2D g2 = (Graphics2D) graphics.create();
         g2.setRenderingHint(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_ON);
         g2.setRenderingHint(RenderingHints.KEY_RENDERING, RenderingHints.VALUE_RENDER_QUALITY);
+        g2.setRenderingHint(RenderingHints.KEY_TEXT_ANTIALIASING, RenderingHints.VALUE_TEXT_ANTIALIAS_ON);
 
         int width = getWidth() - 1;
         int height = getHeight() - 1;
-        RoundRectangle2D card = new RoundRectangle2D.Float(0, 0, width, height, 22, 22);
+        boolean compact = height <= 230;
+        boolean preview = height >= 390;
 
-        Color topColor = hiddenCard ? new Color(40, 44, 58) : accent.brighter();
-        Color bottomColor = hiddenCard ? new Color(17, 18, 28) : accent.darker().darker();
+        int outerPad = compact ? 8 : 10;
+        int titleHeight = preview ? 34 : compact ? 24 : 28;
+        int manaBubbleSize = preview ? 34 : compact ? 24 : 28;
+        int artHeight = preview ? 250 : compact ? 116 : 156;
+        int footerHeight = preview ? 30 : compact ? 24 : 26;
+        int arc = preview ? 28 : compact ? 18 : 22;
+
+        RoundRectangle2D card = new RoundRectangle2D.Float(0, 0, width, height, arc, arc);
+        Color topColor = hiddenCard ? new Color(38, 41, 54) : accent.brighter();
+        Color bottomColor = hiddenCard ? new Color(18, 20, 30) : accent.darker().darker();
         g2.setPaint(new GradientPaint(0, 0, topColor, 0, height, bottomColor));
         g2.fill(card);
 
-        if (artwork != null) {
-            Image scaled = artwork.getScaledInstance(width - 18, 85, Image.SCALE_SMOOTH);
-            g2.setClip(new RoundRectangle2D.Float(9, 36, width - 18, 85, 16, 16));
-            g2.drawImage(scaled, 9, 36, null);
-            g2.setClip(null);
-            g2.setColor(new Color(0, 0, 0, 100));
-            g2.fillRoundRect(9, 36, width - 18, 85, 16, 16);
-        } else {
-            g2.setColor(new Color(255, 255, 255, 28));
-            g2.fillRoundRect(9, 36, width - 18, 85, 16, 16);
-            drawCenteredText(g2, hiddenCard ? "?" : "Sin arte", 9, 36, width - 18, 85, new Font("SansSerif", Font.BOLD, 22), new Color(255, 255, 255, 180));
-        }
+        g2.setColor(new Color(255, 255, 255, 18));
+        g2.fillRoundRect(outerPad, outerPad, width - (outerPad * 2), height - (outerPad * 2), arc - 6, arc - 6);
 
-        g2.setColor(new Color(14, 14, 22, 210));
-        g2.fillRoundRect(10, 8, width - 20, 22, 12, 12);
-        g2.setColor(new Color(255, 255, 255, 230));
-        g2.setFont(new Font("SansSerif", Font.BOLD, 14));
-        drawTrimmedText(g2, title, 16, 24, width - 48);
+        int artX = outerPad + 2;
+        int artY = outerPad + titleHeight + 10;
+        int artWidth = width - ((outerPad + 2) * 2);
+        int footerY = height - outerPad - footerHeight;
+        int artBottomGap = compact ? 16 : 18;
+        int typeY = artY + artHeight + artBottomGap;
+
+        drawArtwork(g2, artX, artY, artWidth, artHeight, compact ? 12 : 16);
+
+        g2.setColor(new Color(12, 14, 22, 214));
+        g2.fillRoundRect(outerPad, outerPad, width - (outerPad * 2), titleHeight, 14, 14);
+        g2.setColor(new Color(255, 255, 255, 232));
+        g2.setFont(new Font("Serif", Font.BOLD, preview ? 22 : compact ? 13 : 17));
+        drawTrimmedText(g2, title, outerPad + 10, outerPad + titleHeight - 8, width - (outerPad * 2) - manaBubbleSize - 22);
 
         if (manaCost >= 0) {
-            g2.setColor(new Color(250, 210, 94));
-            g2.fillOval(width - 38, 8, 26, 26);
-            g2.setColor(new Color(59, 40, 8));
-            g2.setFont(new Font("SansSerif", Font.BOLD, 13));
-            drawCenteredText(g2, String.valueOf(manaCost), width - 38, 8, 26, 26, g2.getFont(), g2.getColor());
+            int manaX = width - outerPad - manaBubbleSize - 8;
+            int manaY = outerPad + ((titleHeight - manaBubbleSize) / 2);
+            g2.setColor(new Color(252, 209, 82));
+            g2.fillOval(manaX, manaY, manaBubbleSize, manaBubbleSize);
+            g2.setColor(new Color(67, 45, 10));
+            g2.setFont(new Font("SansSerif", Font.BOLD, preview ? 16 : compact ? 11 : 14));
+            drawCenteredText(g2, String.valueOf(manaCost), manaX, manaY, manaBubbleSize, manaBubbleSize, g2.getFont(), g2.getColor());
         }
 
-        g2.setFont(new Font("SansSerif", Font.BOLD, 11));
-        g2.setColor(new Color(255, 255, 255, 200));
-        g2.drawString(typeLabel, 14, 136);
+        g2.setColor(new Color(236, 239, 246, 220));
+        g2.setFont(new Font("SansSerif", Font.BOLD, preview ? 15 : compact ? 11 : 13));
+        drawTrimmedText(g2, typeLabel, outerPad + 4, typeY, artWidth - 8);
 
-        int descriptionY = 148;
-        g2.setFont(new Font("SansSerif", Font.PLAIN, 11));
-        g2.setColor(new Color(245, 245, 245));
-        drawWrappedText(g2, description, 14, descriptionY, width - 28, 4, 14);
-
-        g2.setColor(new Color(15, 16, 24, 190));
-        g2.fillRoundRect(10, height - 32, width - 20, 20, 10, 10);
-        g2.setColor(new Color(255, 255, 255, 220));
-        g2.setFont(new Font("SansSerif", Font.BOLD, 11));
-        drawCenteredText(g2, footer, 10, height - 32, width - 20, 20, g2.getFont(), g2.getColor());
+        g2.setColor(new Color(14, 16, 24, 206));
+        g2.fillRoundRect(outerPad, footerY, width - (outerPad * 2), footerHeight, 12, 12);
+        g2.setColor(new Color(255, 255, 255, 228));
+        g2.setFont(new Font("SansSerif", Font.BOLD, preview ? 14 : compact ? 10 : 12));
+        drawCenteredText(g2, footer, outerPad, footerY, width - (outerPad * 2), footerHeight, g2.getFont(), g2.getColor());
 
         g2.setStroke(new BasicStroke(isSelected() ? 3f : 2f));
-        g2.setColor(isSelected() ? new Color(255, 224, 140) : new Color(255, 255, 255, 90));
+        g2.setColor(isSelected() ? new Color(255, 227, 144) : new Color(255, 255, 255, 92));
         g2.draw(card);
 
         if (!isEnabled()) {
-            g2.setColor(new Color(0, 0, 0, 120));
+            g2.setColor(new Color(0, 0, 0, 110));
             g2.fill(card);
         }
 
         g2.dispose();
     }
 
+    private void drawArtwork(Graphics2D g2, int x, int y, int width, int height, int arc) {
+        if (artwork != null) {
+            Image scaled = artwork.getScaledInstance(width, height, Image.SCALE_SMOOTH);
+            g2.setClip(new RoundRectangle2D.Float(x, y, width, height, arc, arc));
+            g2.drawImage(scaled, x, y, null);
+            g2.setClip(null);
+
+            g2.setPaint(new GradientPaint(
+                    x,
+                    y,
+                    new Color(0, 0, 0, 18),
+                    x,
+                    y + height,
+                    new Color(0, 0, 0, 128)));
+            g2.fillRoundRect(x, y, width, height, arc, arc);
+            g2.setColor(new Color(255, 255, 255, 24));
+            g2.drawRoundRect(x, y, width, height, arc, arc);
+            return;
+        }
+
+        g2.setColor(new Color(255, 255, 255, 24));
+        g2.fillRoundRect(x, y, width, height, arc, arc);
+        g2.setColor(new Color(255, 255, 255, 170));
+        drawCenteredText(
+                g2,
+                hiddenCard ? "?" : "Sin arte",
+                x,
+                y,
+                width,
+                height,
+                new Font("SansSerif", Font.BOLD, height >= 150 ? 28 : 20),
+                g2.getColor());
+    }
+
     private String buildTooltip() {
-        return "<html><b>" + title + "</b><br>" + description + "<br><i>" + footer + "</i></html>";
+        return "<html><div style='width:260px'><b>" + title + "</b><br><br>" + description
+                + "<br><br><i>" + footer + "</i></div></html>";
     }
 
     private static BufferedImage loadImage(String imagePath) {

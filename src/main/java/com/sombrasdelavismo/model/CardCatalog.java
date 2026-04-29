@@ -342,7 +342,7 @@ public final class CardCatalog {
                 0,
                 null,
                 "Muestra la mano del rival durante tu turno.",
-                null));
+                "cards/createcard scanner.jpg"));
         register(new SpellCard(
                 "APUESTA",
                 "Apuesta",
@@ -408,7 +408,7 @@ public final class CardCatalog {
                 0,
                 null,
                 "Tus criaturas no reciben danio enemigo durante la siguiente ronda rival.",
-                null));
+                "cards/createcard simeone.jpg"));
         register(new SpellCard(
                 "BANO",
                 "Bano",
@@ -419,7 +419,7 @@ public final class CardCatalog {
                 0,
                 null,
                 "Si Adrian, Fabio y Fernando estan en mesa, desbloquea Humo para el resto de la partida.",
-                null));
+                "cards/createcard enredaderas.jpg"));
     }
 
     private static void register(Card card) {
