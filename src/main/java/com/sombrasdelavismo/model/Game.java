@@ -35,8 +35,8 @@ public class Game {
         this.log = new ArrayList<>();
         this.currentPlayer = player1;
         this.waitingPlayer = player2;
-        this.phase = "Preparacion";
-        this.lastAction = "La partida todavia no ha comenzado.";
+        this.phase = "Preparación";
+        this.lastAction = "La partida todavía no ha comenzado.";
     }
 
     public Player getPlayer1() {
@@ -106,7 +106,7 @@ public class Game {
 
     public ActionResult nextTurn() {
         if (finished) {
-            return ActionResult.failure("La partida ya termino.");
+            return ActionResult.failure("La partida ya terminó.");
         }
 
         currentPlayer.setRevealOpponentHand(false);
@@ -124,7 +124,7 @@ public class Game {
 
     public String explainWhyCannotPlay(Card card) {
         if (finished) {
-            return "La partida ya termino.";
+            return "La partida ya terminó.";
         }
         if (card == null) {
             return "Selecciona una carta de tu mano.";
@@ -133,12 +133,12 @@ public class Game {
             return "Solo puedes jugar cartas que esten en tu mano.";
         }
         if (currentPlayer.getCurrentMana() < card.getManaCost()) {
-            return "Necesitas " + card.getManaCost() + " de mana y solo tienes "
+            return "Necesitas " + card.getManaCost() + " de maná y solo tienes "
                     + currentPlayer.getCurrentMana() + ".";
         }
         if (card instanceof CreatureCard) {
             if (currentPlayer.getBattlefield().size() >= BOARD_LIMIT) {
-                return "Tu tablero ya esta lleno. El limite es de " + BOARD_LIMIT + " criaturas.";
+                return "Tu tablero ya está lleno. El límite es de " + BOARD_LIMIT + " criaturas.";
             }
             return null;
         }
@@ -151,7 +151,7 @@ public class Game {
 
     public ActionResult playCard(Card card, CreatureCard target) {
         if (finished) {
-            return ActionResult.failure("La partida ya termino.");
+            return ActionResult.failure("La partida ya terminó.");
         }
         if (card == null) {
             return ActionResult.failure("Selecciona una carta.");
@@ -171,7 +171,7 @@ public class Game {
         }
 
         if (!currentPlayer.spendMana(card.getManaCost())) {
-            return ActionResult.failure("No tienes mana suficiente.");
+            return ActionResult.failure("No tienes maná suficiente.");
         }
 
         currentPlayer.removeFromHand(card);
@@ -195,7 +195,7 @@ public class Game {
 
     public String explainWhyCannotAttack(CreatureCard attacker) {
         if (finished) {
-            return "La partida ya termino.";
+            return "La partida ya terminó.";
         }
         if (attacker == null) {
             return "Selecciona una criatura de tu campo.";
@@ -204,13 +204,13 @@ public class Game {
             return "La criatura debe estar en tu campo para poder atacar.";
         }
         if (attacker.getHealth() <= 0) {
-            return attacker.getName() + " ya no esta disponible para combatir.";
+            return attacker.getName() + " ya no está disponible para combatir.";
         }
         if (attacker.hasSummoningSickness()) {
-            return attacker.getName() + " tiene mareo de invocacion y no puede atacar este turno.";
+            return attacker.getName() + " tiene mareo de invocación y no puede atacar este turno.";
         }
         if (attacker.isExhausted()) {
-            return attacker.getName() + " ya esta girado y no puede atacar ahora.";
+            return attacker.getName() + " ya está girado y no puede atacar ahora.";
         }
         return null;
     }
@@ -241,7 +241,7 @@ public class Game {
             return ActionResult.failure(attackRestriction);
         }
         if (blocker != null && !waitingPlayer.getBattlefield().contains(blocker)) {
-            return ActionResult.failure("El defensor elegido no esta en el tablero rival.");
+            return ActionResult.failure("El defensor elegido no está en el tablero rival.");
         }
 
         phase = "Combate";
@@ -257,7 +257,7 @@ public class Game {
             }
             return recordSuccess(
                     currentPlayer.getName() + " ataca directamente con " + attacker.getName()
-                            + " y hace " + attacker.getAttack() + " de danio a " + waitingPlayer.getName()
+                            + " y hace " + attacker.getAttack() + " de daño a " + waitingPlayer.getName()
                             + ", que baja a " + waitingPlayer.getLife() + " de vida.");
         }
 
@@ -344,7 +344,7 @@ public class Game {
                 List<String> deadCreatures = cleanupDeadCreatures();
                 return recordSuccess(withManaInfo(withDeaths(
                         currentPlayer.getName() + " desata " + publicName + " y todo el tablero recibe "
-                                + spellCard.getPrimaryValue() + " de danio.",
+                                + spellCard.getPrimaryValue() + " de daño.",
                         deadCreatures)), hiddenBySmoke ? "La carta oculta era " + spellCard.getName() + "." : null);
             }
             case SUMMON_LIN -> {
@@ -376,8 +376,8 @@ public class Game {
                 currentPlayer.boostMana(spellCard.getPrimaryValue(), MAX_MANA);
                 return recordSuccess(
                         currentPlayer.getName() + " juega " + publicName + " y gana "
-                                + spellCard.getPrimaryValue() + " de mana extra. Ahora queda con "
-                                + currentPlayer.getCurrentMana() + "/" + currentPlayer.getMaxMana() + " de mana.",
+                                + spellCard.getPrimaryValue() + " de maná extra. Ahora queda con "
+                                + currentPlayer.getCurrentMana() + "/" + currentPlayer.getMaxMana() + " de maná.",
                         hiddenBySmoke ? "La carta oculta era " + spellCard.getName() + "." : null);
             }
             case SMOKE -> {
@@ -412,7 +412,7 @@ public class Game {
                 List<String> deadCreatures = cleanupDeadCreatures();
                 return recordSuccess(withManaInfo(withDeaths(
                         currentPlayer.getName() + " libera " + publicName + " y cada criatura recibe "
-                                + spellCard.getPrimaryValue() + " de danio.",
+                                + spellCard.getPrimaryValue() + " de daño.",
                         deadCreatures)), hiddenBySmoke ? "La carta oculta era " + spellCard.getName() + "." : null);
             }
             case PROTECT_ALLIES -> {
@@ -429,7 +429,7 @@ public class Game {
                                 + " y desbloquea Humo para el resto de la partida."));
             }
             default -> {
-                return ActionResult.failure("Ese hechizo aun no tiene implementacion.");
+                return ActionResult.failure("Ese hechizo aún no tiene implementación.");
             }
         }
     }
@@ -501,13 +501,13 @@ public class Game {
         }
         if ((spellCard.getEffect() == SpellEffect.SUMMON_LIN || spellCard.getEffect() == SpellEffect.SUMMON_MONO_A)
                 && currentPlayer.getBattlefield().size() >= BOARD_LIMIT) {
-            return "No puedes invocar mas criaturas porque tu tablero ya esta lleno.";
+            return "No puedes invocar más criaturas porque tu tablero ya está lleno.";
         }
         if (spellCard.getEffect() == SpellEffect.SMOKE && !currentPlayer.isSmokeUnlocked()) {
-            return "Humo esta bloqueado. Antes debes usar Bano con Adrian, Fabio y Fernando en tu campo.";
+            return "Humo está bloqueado. Antes debes usar Baño con Adrian, Fabio y Fernando en tu campo.";
         }
         if (spellCard.getEffect() == SpellEffect.UNLOCK_SMOKE && !currentPlayer.hasBathroomCrewOnBoard()) {
-            return "Bano solo funciona si Adrian, Fabio y Fernando estan en tu campo.";
+            return "Baño solo funciona si Adrian, Fabio y Fernando están en tu campo.";
         }
         return null;
     }
@@ -542,10 +542,10 @@ public class Game {
             return loseByFatigue(currentPlayer);
         }
 
-        phase = "Accion";
+        phase = "Acción";
         return recordSuccess(
                 currentPlayer.getName() + " empieza el turno " + turnNumber + ", roba " + drawnCard.getName()
-                        + " y queda con " + currentPlayer.getCurrentMana() + "/" + currentPlayer.getMaxMana() + " de mana.");
+                        + " y queda con " + currentPlayer.getCurrentMana() + "/" + currentPlayer.getMaxMana() + " de maná.");
     }
 
     private ActionResult updateWinnerByLife() {
@@ -565,7 +565,7 @@ public class Game {
     private ActionResult loseByFatigue(Player player) {
         finished = true;
         winner = player == player1 ? player2 : player1;
-        return recordSuccess(player.getName() + " pierde por fatiga magica al intentar robar con el mazo vacio.");
+        return recordSuccess(player.getName() + " pierde por fatiga mágica al intentar robar con el mazo vacío.");
     }
 
     private ActionResult recordSuccess(String publicMessage) {
@@ -579,14 +579,14 @@ public class Game {
     }
 
     private String withManaInfo(String message) {
-        return message + " Mana restante: " + currentPlayer.getCurrentMana() + "/" + currentPlayer.getMaxMana() + ".";
+        return message + " Maná restante: " + currentPlayer.getCurrentMana() + "/" + currentPlayer.getMaxMana() + ".";
     }
 
     private String describeDamage(String sourceName, String targetName, int damage) {
         if (damage <= 0) {
-            return sourceName + " no consigue hacer danio a " + targetName + ".";
+            return sourceName + " no consigue hacer daño a " + targetName + ".";
         }
-        return sourceName + " hace " + damage + " de danio a " + targetName + ".";
+        return sourceName + " hace " + damage + " de daño a " + targetName + ".";
     }
 
     private String withDeaths(String baseMessage, List<String> deadCreatures) {

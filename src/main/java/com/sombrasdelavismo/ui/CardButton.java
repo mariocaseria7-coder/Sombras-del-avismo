@@ -9,7 +9,6 @@ import java.awt.FontMetrics;
 import java.awt.GradientPaint;
 import java.awt.Graphics;
 import java.awt.Graphics2D;
-import java.awt.Image;
 import java.awt.RenderingHints;
 import java.awt.geom.RoundRectangle2D;
 import java.awt.image.BufferedImage;
@@ -80,15 +79,17 @@ public class CardButton extends JToggleButton {
         g2.setRenderingHint(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_ON);
         g2.setRenderingHint(RenderingHints.KEY_RENDERING, RenderingHints.VALUE_RENDER_QUALITY);
         g2.setRenderingHint(RenderingHints.KEY_TEXT_ANTIALIASING, RenderingHints.VALUE_TEXT_ANTIALIAS_ON);
+        g2.setRenderingHint(RenderingHints.KEY_INTERPOLATION, RenderingHints.VALUE_INTERPOLATION_BICUBIC);
 
         int width = getWidth() - 1;
         int height = getHeight() - 1;
         boolean compact = height <= 230;
         boolean preview = height >= 390;
+        boolean artworkCard = artwork != null && !hiddenCard;
 
         int outerPad = compact ? 8 : 10;
         int titleHeight = preview ? 34 : compact ? 24 : 28;
-        int manaBubbleSize = preview ? 34 : compact ? 24 : 28;
+        int manaBubbleSize = preview ? 38 : compact ? 28 : 32;
         int artHeight = preview ? 250 : compact ? 116 : 156;
         int footerHeight = preview ? 30 : compact ? 24 : 26;
         int arc = preview ? 28 : compact ? 18 : 22;
@@ -102,34 +103,55 @@ public class CardButton extends JToggleButton {
         g2.setColor(new Color(255, 255, 255, 18));
         g2.fillRoundRect(outerPad, outerPad, width - (outerPad * 2), height - (outerPad * 2), arc - 6, arc - 6);
 
-        int artX = outerPad + 2;
-        int artY = outerPad + titleHeight + 10;
-        int artWidth = width - ((outerPad + 2) * 2);
         int footerY = height - outerPad - footerHeight;
-        int artBottomGap = compact ? 16 : 18;
-        int typeY = artY + artHeight + artBottomGap;
+        if (artworkCard) {
+            int artX = outerPad + 3;
+            int artY = outerPad + 3;
+            int artWidth = width - ((outerPad + 3) * 2);
+            int artHeightFull = footerY - artY - 8;
+            drawArtwork(g2, artX, artY, artWidth, artHeightFull, compact ? 14 : 18, false);
+        } else {
+            int artX = outerPad + 2;
+            int artY = outerPad + titleHeight + 10;
+            int artWidth = width - ((outerPad + 2) * 2);
+            int artBottomGap = compact ? 16 : 18;
+            int typeY = artY + artHeight + artBottomGap;
 
-        drawArtwork(g2, artX, artY, artWidth, artHeight, compact ? 12 : 16);
+            drawArtwork(g2, artX, artY, artWidth, artHeight, compact ? 12 : 16, true);
 
-        g2.setColor(new Color(12, 14, 22, 214));
-        g2.fillRoundRect(outerPad, outerPad, width - (outerPad * 2), titleHeight, 14, 14);
-        g2.setColor(new Color(255, 255, 255, 232));
-        g2.setFont(new Font("Serif", Font.BOLD, preview ? 22 : compact ? 13 : 17));
-        drawTrimmedText(g2, title, outerPad + 10, outerPad + titleHeight - 8, width - (outerPad * 2) - manaBubbleSize - 22);
+            g2.setColor(new Color(12, 14, 22, 214));
+            g2.fillRoundRect(outerPad, outerPad, width - (outerPad * 2), titleHeight, 14, 14);
+            g2.setColor(new Color(255, 255, 255, 232));
+            g2.setFont(new Font("Serif", Font.BOLD, preview ? 22 : compact ? 13 : 17));
+            drawTrimmedText(
+                    g2,
+                    title,
+                    outerPad + 10,
+                    outerPad + titleHeight - 8,
+                    width - (outerPad * 2) - manaBubbleSize - 22);
+
+            g2.setColor(new Color(236, 239, 246, 220));
+            g2.setFont(new Font("SansSerif", Font.BOLD, preview ? 15 : compact ? 11 : 13));
+            drawTrimmedText(g2, typeLabel, outerPad + 4, typeY, artWidth - 8);
+        }
 
         if (manaCost >= 0) {
             int manaX = width - outerPad - manaBubbleSize - 8;
-            int manaY = outerPad + ((titleHeight - manaBubbleSize) / 2);
+            int manaY = outerPad + 8;
             g2.setColor(new Color(252, 209, 82));
             g2.fillOval(manaX, manaY, manaBubbleSize, manaBubbleSize);
             g2.setColor(new Color(67, 45, 10));
-            g2.setFont(new Font("SansSerif", Font.BOLD, preview ? 16 : compact ? 11 : 14));
-            drawCenteredText(g2, String.valueOf(manaCost), manaX, manaY, manaBubbleSize, manaBubbleSize, g2.getFont(), g2.getColor());
+            g2.setFont(new Font("SansSerif", Font.BOLD, preview ? 18 : compact ? 12 : 15));
+            drawCenteredText(
+                    g2,
+                    String.valueOf(manaCost),
+                    manaX,
+                    manaY,
+                    manaBubbleSize,
+                    manaBubbleSize,
+                    g2.getFont(),
+                    g2.getColor());
         }
-
-        g2.setColor(new Color(236, 239, 246, 220));
-        g2.setFont(new Font("SansSerif", Font.BOLD, preview ? 15 : compact ? 11 : 13));
-        drawTrimmedText(g2, typeLabel, outerPad + 4, typeY, artWidth - 8);
 
         g2.setColor(new Color(14, 16, 24, 206));
         g2.fillRoundRect(outerPad, footerY, width - (outerPad * 2), footerHeight, 12, 12);
@@ -149,21 +171,25 @@ public class CardButton extends JToggleButton {
         g2.dispose();
     }
 
-    private void drawArtwork(Graphics2D g2, int x, int y, int width, int height, int arc) {
+    private void drawArtwork(Graphics2D g2, int x, int y, int width, int height, int arc, boolean overlay) {
         if (artwork != null) {
-            Image scaled = artwork.getScaledInstance(width, height, Image.SCALE_SMOOTH);
+            BufferedImage scaled = scaleImageToFit(artwork, width, height);
+            int drawX = x + ((width - scaled.getWidth()) / 2);
+            int drawY = y + ((height - scaled.getHeight()) / 2);
             g2.setClip(new RoundRectangle2D.Float(x, y, width, height, arc, arc));
-            g2.drawImage(scaled, x, y, null);
+            g2.drawImage(scaled, drawX, drawY, null);
             g2.setClip(null);
 
-            g2.setPaint(new GradientPaint(
-                    x,
-                    y,
-                    new Color(0, 0, 0, 18),
-                    x,
-                    y + height,
-                    new Color(0, 0, 0, 128)));
-            g2.fillRoundRect(x, y, width, height, arc, arc);
+            if (overlay) {
+                g2.setPaint(new GradientPaint(
+                        x,
+                        y,
+                        new Color(0, 0, 0, 18),
+                        x,
+                        y + height,
+                        new Color(0, 0, 0, 118)));
+                g2.fillRoundRect(x, y, width, height, arc, arc);
+            }
             g2.setColor(new Color(255, 255, 255, 24));
             g2.drawRoundRect(x, y, width, height, arc, arc);
             return;
@@ -209,6 +235,23 @@ public class CardButton extends JToggleButton {
             IMAGE_CACHE.put(imagePath, null);
             return null;
         }
+    }
+
+    private BufferedImage scaleImageToFit(BufferedImage source, int maxWidth, int maxHeight) {
+        double ratio = Math.min((double) maxWidth / source.getWidth(), (double) maxHeight / source.getHeight());
+        ratio = Math.min(ratio, 1.0d);
+
+        int scaledWidth = Math.max(1, (int) Math.round(source.getWidth() * ratio));
+        int scaledHeight = Math.max(1, (int) Math.round(source.getHeight() * ratio));
+        BufferedImage scaled = new BufferedImage(scaledWidth, scaledHeight, BufferedImage.TYPE_INT_ARGB);
+
+        Graphics2D imageGraphics = scaled.createGraphics();
+        imageGraphics.setRenderingHint(RenderingHints.KEY_INTERPOLATION, RenderingHints.VALUE_INTERPOLATION_BICUBIC);
+        imageGraphics.setRenderingHint(RenderingHints.KEY_RENDERING, RenderingHints.VALUE_RENDER_QUALITY);
+        imageGraphics.setRenderingHint(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_ON);
+        imageGraphics.drawImage(source, 0, 0, scaledWidth, scaledHeight, null);
+        imageGraphics.dispose();
+        return scaled;
     }
 
     private void drawTrimmedText(Graphics2D g2, String text, int x, int y, int width) {

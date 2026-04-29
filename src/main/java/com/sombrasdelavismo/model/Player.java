@@ -201,7 +201,7 @@ public class Player {
 
     public String describeHand() {
         if (hand.isEmpty()) {
-            return "La mano rival esta vacia.";
+            return "La mano rival está vacía.";
         }
 
         return hand.stream()

@@ -88,8 +88,8 @@ public final class CardCatalog {
                 30,
                 7,
                 6,
-                "Complicado de tocar. Reduce en 2 el danio que recibe.",
-                "images/carta_marco.jpg",
+                "Complicado de tocar. Reduce en 2 el daño que recibe.",
+                "cards/createcard marco.jpg",
                 true,
                 false));
         register(new CreatureCard(
@@ -99,135 +99,135 @@ public final class CardCatalog {
                 7,
                 4,
                 "Pega fuerte y combina con Carpazo.",
-                "images/carta_juanma.jpg"));
+                "cards/createcard juanma.jpg"));
         register(new CreatureCard(
                 "DIEGO",
-                "Diego",
+                "Dieguito",
                 18,
                 5,
                 6,
                 "El maestro de En Chino. Puede traer a Lin al tablero.",
-                "images/carta_dieguito.jpg"));
+                "cards/createcard dieguitoo.jpg"));
         register(new CreatureCard(
                 "MAMEN",
-                "Mamen",
+                "Mamén",
                 15,
                 3,
                 8,
                 "Aguanta la mesa mientras prepara El Grito.",
-                "images/carta_mamen.jpg"));
+                "cards/createcard mamen.jpg"));
         register(new CreatureCard(
                 "LUIS",
-                "Luis",
+                "Luismi el Nano",
                 10,
                 2,
                 5,
                 "Genera apoyo con Mono A.",
-                "images/carta_luis.jpg"));
+                "cards/createcard luismiii.jpg"));
         register(new CreatureCard(
                 "ALEJANDRO",
-                "Alejandro",
+                "Crespo",
                 10,
                 3,
                 4,
-                "Controla la informacion del rival con Scanner.",
-                null));
+                "Controla la información del rival con Scanner.",
+                "cards/createcard crespo.jpg"));
         register(new CreatureCard(
                 "MARIO_R",
-                "Mario R",
+                "Rodri el ludopata",
                 9,
                 4,
                 3,
-                "Gana mana extra si aparece Apuesta.",
-                "images/carta_marito.jpg"));
+                "Gana maná extra si aparece Apuesta.",
+                "cards/createcard rodri.jpg"));
         register(new CreatureCard(
                 "MARIO_A",
-                "Mario A",
+                "Marito el Tipster",
                 9,
                 1,
                 6,
                 "Resiste mucho y ayuda a rentabilizar Apuesta.",
-                "images/carta_marito.jpg"));
+                "cards/createcard marito.jpg"));
         register(new CreatureCard(
                 "FRAN",
-                "Fran",
+                "Fran el Vapeador",
                 9,
                 5,
                 2,
                 "Aprovecha el humo para confundir al rival.",
-                "images/carta_fran.jpg"));
+                "cards/createcard fran.jpg"));
         register(new CreatureCard(
                 "PEDRO",
-                "Pedro",
+                "Pedrito sin prisas",
                 9,
                 3,
                 4,
                 "Aprovecha el humo para ocultar jugadas.",
-                "images/carta_pedro.jpg"));
+                "cards/createcard pedro.jpg"));
         register(new CreatureCard(
                 "JAVI",
                 "Javi",
                 9,
                 4,
                 3,
-                "Acompania al hechizo Hacker.",
-                "images/carta_javi.jpg"));
+                "Acompaña al hechizo Hacker.",
+                "cards/createcard javi medio.jpg"));
         register(new CreatureCard(
                 "LIN",
-                "Lin",
+                "Lin el Matador",
                 8,
                 6,
                 4,
                 "Kung Fu puede subir su ataque hasta 10.",
-                "images/carta_lin.jpg"));
+                "cards/createcard Lin.jpg"));
         register(new CreatureCard(
                 "QUEMO",
-                "Quemo",
+                "El Quemao",
                 8,
                 2,
                 5,
                 "Su fuego desgasta toda la mesa.",
-                "images/carta_quemao.jpg"));
+                "cards/createcard quemao.jpg"));
         register(new CreatureCard(
                 "JAVI_B",
                 "Javi B",
                 8,
                 5,
                 2,
-                "Otra via para lanzar Hacker.",
-                "images/carta_javi.jpg"));
+                "Otra vía para lanzar Hacker.",
+                "cards/createcard javi medio.jpg"));
         register(new CreatureCard(
                 "FRAN_A",
-                "Fran A",
+                "Alonso",
                 8,
                 4,
                 6,
                 "Simeone protege al equipo durante una ronda.",
-                "images/carta_fran.jpg"));
+                "cards/createcard alonsoo.jpg"));
         register(new CreatureCard(
                 "CARMEN",
                 "Carmen",
                 8,
                 5,
                 6,
-                "Una de las criaturas mas solidas del mazo.",
-                "images/carta_carmen.jpg"));
+                "Una de las criaturas más sólidas del mazo.",
+                "cards/createcard carmenn.jpg"));
         register(new CreatureCard(
                 "URBANO",
                 "Urbano",
                 3,
                 3,
                 1,
-                "Sale rapido para presionar en los primeros turnos.",
-                "images/carta_urbano.jpg"));
+                "Sale rápido para presionar en los primeros turnos.",
+                "cards/createcard urbano.jpg"));
         register(new CreatureCard(
                 "INES",
-                "Ines",
+                "Inés",
                 2,
                 2,
                 2,
                 "Criatura de apoyo para comenzar la partida.",
-                "images/carta_ines.jpg"));
+                "cards/createcard inees.jpg"));
         register(new CreatureCard(
                 "ANTONIO",
                 "Antonio",
@@ -235,15 +235,15 @@ public final class CardCatalog {
                 2,
                 2,
                 "Criatura equilibrada de apertura.",
-                "images/carta_antonio.jpg"));
+                "cards/createcard antonioo.jpg"));
         register(new CreatureCard(
                 "ADRIAN",
                 "Adrian",
                 1,
                 1,
                 3,
-                "Miembro del combo de Bano.",
-                "images/carta_adrian.jpg",
+                "Miembro del combo de Baño.",
+                "cards/createcard adrian.jpg",
                 false,
                 true));
         register(new CreatureCard(
@@ -252,8 +252,8 @@ public final class CardCatalog {
                 1,
                 1,
                 3,
-                "Miembro del combo de Bano.",
-                "images/carta_fabio.jpg",
+                "Miembro del combo de Baño.",
+                "cards/createcard fabio.jpg",
                 false,
                 true));
         register(new CreatureCard(
@@ -262,8 +262,8 @@ public final class CardCatalog {
                 1,
                 1,
                 3,
-                "Miembro del combo de Bano.",
-                "images/carta_fernando.jpg",
+                "Miembro del combo de Baño.",
+                "cards/createcard Fernando.jpg",
                 false,
                 true));
         register(new CreatureCard(
@@ -286,8 +286,8 @@ public final class CardCatalog {
                 0,
                 2,
                 null,
-                "Hechizo rojo: da +3 de ataque y +2 de vida. En Marco pega mucho mas.",
-                "images/hechizo_panda.jpg"));
+                "Hechizo rojo: da +3 de ataque y +2 de vida. En Marco pega mucho más.",
+                "cards/createcard Pandaa.jpg"));
         register(new SpellCard(
                 "CARPAZO",
                 "Carpazo",
@@ -297,8 +297,8 @@ public final class CardCatalog {
                 3,
                 0,
                 null,
-                "Hace 3 de danio a todas las criaturas enemigas.",
-                "images/hechizo_carpazo.jpg"));
+                "Hace 3 de daño a todas las criaturas enemigas.",
+                "cards/createcard carpazoo.jpg"));
         register(new SpellCard(
                 "EN_CHINO",
                 "En Chino",
@@ -309,7 +309,7 @@ public final class CardCatalog {
                 0,
                 "LIN",
                 "Invoca a Lin directamente en tu tablero.",
-                "images/hechizo_enchino.jpg"));
+                "cards/createcard enchino.jpg"));
         register(new SpellCard(
                 "EL_GRITO",
                 "El Grito",
@@ -319,11 +319,11 @@ public final class CardCatalog {
                 3,
                 0,
                 null,
-                "Hace 3 de danio a todas las criaturas de ambos jugadores.",
-                "images/hechizo_elgrito.jpg"));
+                "Hace 3 de daño a todas las criaturas de ambos jugadores.",
+                "cards/createcard elgrito.jpg"));
         register(new SpellCard(
                 "MONO_A",
-                "Mono A",
+                "Mono F1",
                 2,
                 SpellEffect.SUMMON_MONO_A,
                 SpellColor.BLUE,
@@ -331,7 +331,7 @@ public final class CardCatalog {
                 0,
                 "MONO_A_TOKEN",
                 "Invoca una ficha Mono A 3/2.",
-                "images/hechizo_f1.jpg"));
+                "cards/createcard monof1.jpg"));
         register(new SpellCard(
                 "SCANNER",
                 "Scanner",
@@ -345,15 +345,15 @@ public final class CardCatalog {
                 "cards/createcard scanner.jpg"));
         register(new SpellCard(
                 "APUESTA",
-                "Apuesta",
+                "Apuestas",
                 2,
                 SpellEffect.GAIN_MANA,
                 SpellColor.BLUE,
                 3,
                 0,
                 null,
-                "Ganas 3 de mana actual y 3 de mana maximo.",
-                "images/hechizo_apuestas.jpg"));
+                "Ganas 3 de maná actual y 3 de maná máximo.",
+                "cards/createcard apuestas.jpg"));
         register(new SpellCard(
                 "HUMO",
                 "Humo",
@@ -363,11 +363,11 @@ public final class CardCatalog {
                 0,
                 0,
                 null,
-                "La siguiente carta que juegues quedara oculta para el rival.",
-                "images/hechizo_humo.jpg"));
+                "La siguiente carta que juegues quedará oculta para el rival.",
+                "cards/createcard Humoo.jpg"));
         register(new SpellCard(
                 "HACKER",
-                "Hacker",
+                "Hackear",
                 2,
                 SpellEffect.STEAL_CARD,
                 SpellColor.BLUE,
@@ -375,7 +375,7 @@ public final class CardCatalog {
                 0,
                 null,
                 "Roba una carta aleatoria de la mano rival.",
-                "images/hechizo_hackear.jpg"));
+                "cards/createcard hackear.jpg"));
         register(new SpellCard(
                 "KUNG_FU",
                 "Kung Fu",
@@ -386,18 +386,18 @@ public final class CardCatalog {
                 0,
                 null,
                 "Sube el ataque de una criatura propia hasta 10.",
-                "images/hechizo_kungfu.jpg"));
+                "cards/createcard kung fu.jpg"));
         register(new SpellCard(
                 "FUEGO",
-                "Fuego",
+                "Fueguito",
                 3,
                 SpellEffect.FIRE_PULSE,
                 SpellColor.RED,
                 1,
                 0,
                 null,
-                "Hace 1 de danio a todas las criaturas del tablero.",
-                "images/hechizo_fueguito.jpg"));
+                "Hace 1 de daño a todas las criaturas del tablero.",
+                "cards/createcard fueguitoo.jpg"));
         register(new SpellCard(
                 "SIMEONE",
                 "Simeone",
@@ -407,18 +407,18 @@ public final class CardCatalog {
                 0,
                 0,
                 null,
-                "Tus criaturas no reciben danio enemigo durante la siguiente ronda rival.",
+                "Tus criaturas no reciben daño enemigo durante la siguiente ronda rival.",
                 "cards/createcard simeone.jpg"));
         register(new SpellCard(
                 "BANO",
-                "Bano",
+                "Enredaderas",
                 2,
                 SpellEffect.UNLOCK_SMOKE,
                 SpellColor.GRAY,
                 0,
                 0,
                 null,
-                "Si Adrian, Fabio y Fernando estan en mesa, desbloquea Humo para el resto de la partida.",
+                "Si Adrian, Fabio y Fernando están en mesa, desbloquea Humo para el resto de la partida.",
                 "cards/createcard enredaderas.jpg"));
     }
 
