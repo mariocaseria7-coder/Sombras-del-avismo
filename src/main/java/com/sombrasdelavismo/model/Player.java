@@ -1,38 +1,47 @@
 package com.sombrasdelavismo.model;
 
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
+import java.util.stream.Collectors;
 
 public class Player {
-    private static final int INITIAL_LIFE = 20;
-    private static final int MAX_MANA_CAP = 10;
+    public static final int STARTING_LIFE = 20;
 
-    private String name;
+    private final String name;
+    private final List<Card> deckTemplate;
+    private final List<Card> hand;
+    private final List<CreatureCard> battlefield;
+    private final Deck deck;
     private int life;
     private int currentMana;
     private int maxMana;
-    private List<Card> hand;
-    private List<CreatureCard> creatures;
-    private Deck deck;
-    private boolean lostByFatigue;
+    private boolean revealOpponentHand;
+    private boolean smokeUnlocked;
+    private boolean hideNextPlay;
+    private boolean alliesProtected;
 
     public Player(String name) {
         this.name = name;
-        this.life = INITIAL_LIFE;
+        this.deckTemplate = new ArrayList<>();
+        this.hand = new ArrayList<>();
+        this.battlefield = new ArrayList<>();
+        this.deck = new Deck();
+        resetCoreStats();
+    }
+
+    private void resetCoreStats() {
+        this.life = STARTING_LIFE;
         this.currentMana = 0;
         this.maxMana = 0;
-        this.hand = new ArrayList<>();
-        this.creatures = new ArrayList<>();
-        this.deck = new Deck();
-        this.lostByFatigue = false;
+        this.revealOpponentHand = false;
+        this.smokeUnlocked = false;
+        this.hideNextPlay = false;
+        this.alliesProtected = false;
     }
 
     public String getName() {
         return name;
-    }
-
-    public void setName(String name) {
-        this.name = name;
     }
 
     public int getLife() {
@@ -47,117 +56,156 @@ public class Player {
         return currentMana;
     }
 
-    public void setCurrentMana(int currentMana) {
-        this.currentMana = Math.max(0, currentMana);
-    }
-
     public int getMaxMana() {
         return maxMana;
     }
 
-    public void setMaxMana(int maxMana) {
-        this.maxMana = Math.min(MAX_MANA_CAP, Math.max(0, maxMana));
+    public boolean isRevealOpponentHand() {
+        return revealOpponentHand;
+    }
+
+    public void setRevealOpponentHand(boolean revealOpponentHand) {
+        this.revealOpponentHand = revealOpponentHand;
+    }
+
+    public boolean isSmokeUnlocked() {
+        return smokeUnlocked;
+    }
+
+    public void setSmokeUnlocked(boolean smokeUnlocked) {
+        this.smokeUnlocked = smokeUnlocked;
+    }
+
+    public boolean isHideNextPlay() {
+        return hideNextPlay;
+    }
+
+    public void setHideNextPlay(boolean hideNextPlay) {
+        this.hideNextPlay = hideNextPlay;
+    }
+
+    public boolean isAlliesProtected() {
+        return alliesProtected;
+    }
+
+    public void setAlliesProtected(boolean alliesProtected) {
+        this.alliesProtected = alliesProtected;
     }
 
     public List<Card> getHand() {
-        return hand;
+        return Collections.unmodifiableList(hand);
     }
 
-    public void setHand(List<Card> hand) {
-        this.hand = hand;
-    }
-
-    public List<CreatureCard> getCreatures() {
-        return creatures;
-    }
-
-    public void setCreatures(List<CreatureCard> creatures) {
-        this.creatures = creatures;
+    public List<CreatureCard> getBattlefield() {
+        return Collections.unmodifiableList(battlefield);
     }
 
     public Deck getDeck() {
         return deck;
     }
 
-    public void setDeck(Deck deck) {
-        this.deck = deck;
-    }
-
-    public boolean isLostByFatigue() {
-        return lostByFatigue;
-    }
-
-    public void setLostByFatigue(boolean lostByFatigue) {
-        this.lostByFatigue = lostByFatigue;
-    }
-
-    public Card drawCard() {
-        Card card = deck.draw();
-        if (card == null) {
-            lostByFatigue = true;
-            return null;
+    public void setDeckTemplate(List<Card> cards) {
+        deckTemplate.clear();
+        for (Card card : cards) {
+            deckTemplate.add(card.copy());
         }
-        hand.add(card);
-        return card;
     }
 
-    public void addCardToDeck(Card card) {
-        deck.addCard(card);
+    public void resetForNewGame() {
+        resetCoreStats();
+        hand.clear();
+        battlefield.clear();
+        deck.loadFreshCards(deckTemplate);
     }
 
     public void shuffleDeck() {
         deck.shuffle();
     }
 
-    public boolean removeFromHand(Card card) {
-        return hand.remove(card);
-    }
-
-    public void addCreature(CreatureCard creature) {
-        creatures.add(creature);
-    }
-
-    public boolean removeCreature(CreatureCard creature) {
-        return creatures.remove(creature);
+    public Card drawCard() {
+        Card drawnCard = deck.draw();
+        if (drawnCard != null) {
+            hand.add(drawnCard);
+        }
+        return drawnCard;
     }
 
     public boolean canPlay(Card card) {
-        return card != null && currentMana >= card.getCostMana();
+        return card != null && currentMana >= card.getManaCost();
     }
 
     public boolean spendMana(int amount) {
-        if (currentMana < amount) {
+        if (amount > currentMana) {
             return false;
         }
         currentMana -= amount;
         return true;
     }
 
-    public void increaseMana() {
-        if (maxMana < MAX_MANA_CAP) {
-            maxMana++;
-        }
+    public void increaseMaxMana(int amount, int manaCap) {
+        maxMana = Math.min(manaCap, maxMana + amount);
     }
 
     public void refillMana() {
         currentMana = maxMana;
     }
 
-    public void receiveDamage(int amount) {
-        life = Math.max(0, life - amount);
+    public void boostMana(int amount, int manaCap) {
+        maxMana = Math.min(manaCap, maxMana + amount);
+        currentMana = Math.min(maxMana, currentMana + amount);
+    }
+
+    public void receiveDamage(int damage) {
+        life = Math.max(0, life - damage);
     }
 
     public void heal(int amount) {
         life += Math.max(0, amount);
     }
 
-    public void resetForNewGame() {
-        life = INITIAL_LIFE;
-        currentMana = 0;
-        maxMana = 0;
-        hand.clear();
-        creatures.clear();
-        lostByFatigue = false;
-        deck.getGraveyard().clear();
+    public boolean removeFromHand(Card card) {
+        return hand.remove(card);
+    }
+
+    public void addCardToHand(Card card) {
+        if (card != null) {
+            hand.add(card);
+        }
+    }
+
+    public void addToBattlefield(CreatureCard creature) {
+        battlefield.add(creature);
+    }
+
+    public boolean removeFromBattlefield(CreatureCard creature) {
+        return battlefield.remove(creature);
+    }
+
+    public boolean hasBathroomCrewOnBoard() {
+        boolean hasAdrian = false;
+        boolean hasFabio = false;
+        boolean hasFernando = false;
+
+        for (CreatureCard creature : battlefield) {
+            if ("ADRIAN".equals(creature.getId())) {
+                hasAdrian = true;
+            } else if ("FABIO".equals(creature.getId())) {
+                hasFabio = true;
+            } else if ("FERNANDO".equals(creature.getId())) {
+                hasFernando = true;
+            }
+        }
+
+        return hasAdrian && hasFabio && hasFernando;
+    }
+
+    public String describeHand() {
+        if (hand.isEmpty()) {
+            return "La mano rival esta vacia.";
+        }
+
+        return hand.stream()
+                .map(card -> card.getName() + " (" + card.getManaCost() + ")")
+                .collect(Collectors.joining(", "));
     }
 }

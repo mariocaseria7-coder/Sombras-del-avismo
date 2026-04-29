@@ -1,93 +1,67 @@
 package com.sombrasdelavismo.model;
 
 public class SpellCard extends Card {
-    private SpellType type;
-    private int value;
-    private int drawCount;
-    private int buffAttack;
-    private int buffLife;
-
-    public SpellCard(String name, int costMana, SpellType type, int value, String description, String imagePath) {
-        this(name, costMana, type, value, 0, 0, description, imagePath);
-    }
+    private final SpellEffect effect;
+    private final SpellColor color;
+    private final int primaryValue;
+    private final int secondaryValue;
+    private final String relatedCardId;
 
     public SpellCard(
+            String id,
             String name,
-            int costMana,
-            SpellType type,
-            int value,
-            int buffAttack,
-            int buffLife,
+            int manaCost,
+            SpellEffect effect,
+            SpellColor color,
+            int primaryValue,
+            int secondaryValue,
+            String relatedCardId,
             String description,
             String imagePath) {
-        super(name, costMana, description, imagePath);
-        this.type = type;
-        this.value = value;
-        this.drawCount = type == SpellType.DRAW ? value : 0;
-        this.buffAttack = buffAttack;
-        this.buffLife = buffLife;
+        super(id, name, manaCost, description, imagePath);
+        this.effect = effect;
+        this.color = color;
+        this.primaryValue = primaryValue;
+        this.secondaryValue = secondaryValue;
+        this.relatedCardId = relatedCardId;
     }
 
-    public SpellType getType() {
-        return type;
+    public SpellEffect getEffect() {
+        return effect;
     }
 
-    public void setType(SpellType type) {
-        this.type = type;
+    public SpellColor getColor() {
+        return color;
     }
 
-    public int getValue() {
-        return value;
+    public int getPrimaryValue() {
+        return primaryValue;
     }
 
-    public void setValue(int value) {
-        this.value = value;
+    public int getSecondaryValue() {
+        return secondaryValue;
     }
 
-    public int getDrawCount() {
-        return drawCount;
+    public String getRelatedCardId() {
+        return relatedCardId;
     }
 
-    public void setDrawCount(int drawCount) {
-        this.drawCount = drawCount;
-    }
-
-    public int getBuffAttack() {
-        return buffAttack;
-    }
-
-    public void setBuffAttack(int buffAttack) {
-        this.buffAttack = buffAttack;
-    }
-
-    public int getBuffLife() {
-        return buffLife;
-    }
-
-    public void setBuffLife(int buffLife) {
-        this.buffLife = buffLife;
-    }
-
-    @Override
-    public void usar() {
-        // La resolucion real se gestiona desde Game.
+    public boolean requiresFriendlyTarget() {
+        return effect == SpellEffect.BUFF || effect == SpellEffect.SET_ATTACK_TO_TEN;
     }
 
     @Override
     public Card copy() {
         return new SpellCard(
+                getId(),
                 getName(),
-                getCostMana(),
-                type,
-                value,
-                buffAttack,
-                buffLife,
+                getManaCost(),
+                effect,
+                color,
+                primaryValue,
+                secondaryValue,
+                relatedCardId,
                 getDescription(),
                 getImagePath());
-    }
-
-    @Override
-    public String toString() {
-        return getName() + " [" + type + " " + value + "] Mana " + getCostMana();
     }
 }

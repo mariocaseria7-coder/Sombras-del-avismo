@@ -1,10 +1,14 @@
 package com.sombrasdelavismo;
 
+import com.sombrasdelavismo.model.ActionResult;
+import com.sombrasdelavismo.model.Card;
+import com.sombrasdelavismo.model.CardCatalog;
 import com.sombrasdelavismo.model.CreatureCard;
 import com.sombrasdelavismo.model.Game;
 import com.sombrasdelavismo.model.Player;
 import com.sombrasdelavismo.model.SpellCard;
-import com.sombrasdelavismo.model.SpellType;
+import java.util.ArrayList;
+import java.util.List;
 import org.junit.jupiter.api.Test;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
@@ -16,93 +20,134 @@ class GameTest {
 
     @Test
     void creatureNeedsToWaitUntilNextOwnTurnBeforeAttacking() {
-        Player player1 = new Player("Alice");
-        Player player2 = new Player("Bob");
-        CreatureCard wolf = new CreatureCard("Wolf", 1, 3, 3, "Criatura", "cards/wolf.jpg");
-
-        for (int i = 0; i < 7; i++) {
-            player1.addCardToDeck(new SpellCard("Relleno " + i, 1, SpellType.HEAL, 0, "Nada", "cards/fill.jpg"));
-            player2.addCardToDeck(new SpellCard("Relleno rival " + i, 1, SpellType.HEAL, 0, "Nada", "cards/fill.jpg"));
-        }
-
+        Player player1 = createPlayer("Alice");
+        Player player2 = createPlayer("Bob");
         Game game = new Game(player1, player2);
         game.startGame();
-        player1.getHand().add(wolf);
 
-        assertTrue(game.canPlaySelectedCard(wolf));
-        game.playCard(wolf);
-        assertFalse(game.canAttackWith(wolf));
+        CreatureCard antonio = CardCatalog.createCreature("ANTONIO");
+        player1.addCardToHand(antonio);
+
+        assertTrue(game.canPlaySelectedCard(antonio));
+        game.playCard(antonio);
+        assertFalse(game.canAttackWith(antonio));
 
         game.nextTurn();
         game.nextTurn();
 
-        assertTrue(game.canAttackWith(wolf));
+        assertTrue(game.canAttackWith(antonio));
     }
 
     @Test
-    void spellConsumesManaAndDamagesRival() {
-        Player player1 = new Player("Alice");
-        Player player2 = new Player("Bob");
-        SpellCard bolt = new SpellCard("Bolt", 1, SpellType.DAMAGE, 4, "Dano", "cards/bolt.jpg");
-
-        for (int i = 0; i < 7; i++) {
-            player1.addCardToDeck(new CreatureCard("Aliado " + i, 1, 1, 1, "Criatura", "cards/a.jpg"));
-            player2.addCardToDeck(new CreatureCard("Rival " + i, 1, 1, 1, "Criatura", "cards/b.jpg"));
-        }
-
+    void enChinoSummonsLinToBattlefield() {
+        Player player1 = createPlayer("Alice");
+        Player player2 = createPlayer("Bob");
         Game game = new Game(player1, player2);
         game.startGame();
-        player1.getHand().add(bolt);
 
-        int lifeBefore = player2.getLife();
-        int manaBefore = player1.getCurrentMana();
-        String result = game.playCard(bolt);
+        SpellCard enChino = CardCatalog.createSpell("EN_CHINO");
+        player1.addCardToHand(enChino);
 
-        assertEquals(lifeBefore - 4, player2.getLife());
-        assertEquals(manaBefore - 1, player1.getCurrentMana());
-        assertTrue(result.contains("Bolt"));
+        ActionResult result = game.playCard(enChino);
+
+        assertTrue(result.successful());
+        assertTrue(player1.getBattlefield().stream().anyMatch(creature -> "LIN".equals(creature.getId())));
+        assertTrue(result.publicMessage().contains("Lin"));
     }
 
     @Test
-    void blockedCombatDoesNotPassExcessDamageToPlayer() {
-        Player player1 = new Player("Alice");
-        Player player2 = new Player("Bob");
-        CreatureCard attacker = new CreatureCard("Tigre", 1, 5, 3, "Criatura", "cards/tiger.jpg");
-        CreatureCard blocker = new CreatureCard("Oso", 1, 2, 1, "Criatura", "cards/bear.jpg");
-
-        for (int i = 0; i < 7; i++) {
-            player1.addCardToDeck(new SpellCard("Relleno " + i, 1, SpellType.HEAL, 0, "Nada", "cards/fill.jpg"));
-            player2.addCardToDeck(new SpellCard("Relleno rival " + i, 1, SpellType.HEAL, 0, "Nada", "cards/fill.jpg"));
-        }
-
+    void banoUnlocksHumoWhenBathroomCrewIsOnBoard() {
+        Player player1 = createPlayer("Alice");
+        Player player2 = createPlayer("Bob");
         Game game = new Game(player1, player2);
         game.startGame();
-        player1.getHand().add(attacker);
-        game.playCard(attacker);
-        game.nextTurn();
-        player2.getHand().add(blocker);
-        game.playCard(blocker);
-        game.nextTurn();
 
-        int rivalLifeBefore = player2.getLife();
-        String result = game.attackCreature(attacker, blocker);
+        player1.addToBattlefield(CardCatalog.createCreature("ADRIAN"));
+        player1.addToBattlefield(CardCatalog.createCreature("FABIO"));
+        player1.addToBattlefield(CardCatalog.createCreature("FERNANDO"));
 
-        assertFalse(player2.getCreatures().contains(blocker));
-        assertEquals(rivalLifeBefore, player2.getLife());
-        assertTrue(result.contains("bloquea"));
+        SpellCard bano = CardCatalog.createSpell("BANO");
+        SpellCard humo = CardCatalog.createSpell("HUMO");
+        player1.addCardToHand(bano);
+        player1.addCardToHand(humo);
+
+        assertTrue(game.canPlaySelectedCard(bano));
+        assertFalse(game.canPlaySelectedCard(humo));
+
+        game.playCard(bano);
+
+        assertTrue(player1.isSmokeUnlocked());
+        assertTrue(game.canPlaySelectedCard(humo));
     }
 
     @Test
-    void copiedCardsDoNotShareState() {
-        CreatureCard original = new CreatureCard("Bestia", 2, 3, 2, "Criatura", "cards/beast.jpg");
+    void humoMakesNextCreatureHiddenFromOpponent() {
+        Player player1 = createPlayer("Alice");
+        Player player2 = createPlayer("Bob");
+        Game game = new Game(player1, player2);
+        game.startGame();
+
+        player1.setSmokeUnlocked(true);
+        SpellCard humo = CardCatalog.createSpell("HUMO");
+        CreatureCard ines = CardCatalog.createCreature("INES");
+        player1.addCardToHand(humo);
+        player1.addCardToHand(ines);
+
+        ActionResult smokeResult = game.playCard(humo);
+        ActionResult creatureResult = game.playCard(ines);
+
+        assertTrue(smokeResult.successful());
+        assertTrue(creatureResult.successful());
+        assertTrue(ines.isHiddenFromOpponent());
+        assertTrue(creatureResult.publicMessage().contains("criatura oculta"));
+    }
+
+    @Test
+    void hackerStealsOneCardFromOpponentHand() {
+        Player player1 = createPlayer("Alice");
+        Player player2 = createPlayer("Bob");
+        Game game = new Game(player1, player2);
+        game.startGame();
+
+        SpellCard hacker = CardCatalog.createSpell("HACKER");
+        player1.addCardToHand(hacker);
+
+        int handBeforePlayer2 = player2.getHand().size();
+        ActionResult result = game.playCard(hacker);
+
+        assertTrue(result.successful());
+        assertEquals(handBeforePlayer2 - 1, player2.getHand().size());
+        assertTrue(result.privateMessage().contains("Carta robada:"));
+    }
+
+    @Test
+    void copiedCardsDoNotShareBattleState() {
+        CreatureCard original = CardCatalog.createCreature("MARCO");
         CreatureCard copy = (CreatureCard) original.copy();
 
-        original.prepararInvocacion();
-        original.enderezarParaTurnoPropio();
-        original.girarPorAtaque();
+        original.markSummoned();
+        original.startOwnerTurn();
+        original.exhaust();
+        original.receiveDamage(3);
 
         assertNotSame(original, copy);
-        assertFalse(copy.isCanAttack());
-        assertTrue(copy.isSummoningSickness());
+        assertFalse(copy.isExhausted());
+        assertTrue(copy.hasSummoningSickness());
+        assertEquals(copy.getBaseHealth(), copy.getHealth());
+    }
+
+    private Player createPlayer(String name) {
+        Player player = new Player(name);
+        player.setDeckTemplate(createFillerDeck());
+        return player;
+    }
+
+    private List<Card> createFillerDeck() {
+        List<Card> deck = new ArrayList<>();
+        for (int i = 0; i < 6; i++) {
+            deck.add(CardCatalog.createCreature("ANTONIO"));
+            deck.add(CardCatalog.createCreature("INES"));
+        }
+        return deck;
     }
 }

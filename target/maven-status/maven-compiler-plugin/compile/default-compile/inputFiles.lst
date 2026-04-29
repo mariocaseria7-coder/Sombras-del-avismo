@@ -1,17 +1,13 @@
-/home/alejandro/Escritorio/Nueva carpeta 1/Sombras-del-avismo/src/main/java/com/sombrasdelavismo/Tablero.java
-/home/alejandro/Escritorio/Nueva carpeta 1/Sombras-del-avismo/src/main/java/com/sombrasdelavismo/Card.java
-/home/alejandro/Escritorio/Nueva carpeta 1/Sombras-del-avismo/src/main/java/com/sombrasdelavismo/model/Deck.java
-/home/alejandro/Escritorio/Nueva carpeta 1/Sombras-del-avismo/src/main/java/com/sombrasdelavismo/model/CardFactory.java
-/home/alejandro/Escritorio/Nueva carpeta 1/Sombras-del-avismo/src/main/java/com/sombrasdelavismo/Player.java
-/home/alejandro/Escritorio/Nueva carpeta 1/Sombras-del-avismo/src/main/java/com/sombrasdelavismo/model/AIPlayer.java
-/home/alejandro/Escritorio/Nueva carpeta 1/Sombras-del-avismo/src/main/java/com/sombrasdelavismo/model/Card.java
-/home/alejandro/Escritorio/Nueva carpeta 1/Sombras-del-avismo/src/main/java/com/sombrasdelavismo/model/Game.java
-/home/alejandro/Escritorio/Nueva carpeta 1/Sombras-del-avismo/src/main/java/com/sombrasdelavismo/Main.java
-/home/alejandro/Escritorio/Nueva carpeta 1/Sombras-del-avismo/src/main/java/com/sombrasdelavismo/model/Player.java
-/home/alejandro/Escritorio/Nueva carpeta 1/Sombras-del-avismo/src/main/java/com/sombrasdelavismo/model/SpellCard.java
-/home/alejandro/Escritorio/Nueva carpeta 1/Sombras-del-avismo/src/main/java/com/sombrasdelavismo/SpellCard.java
-/home/alejandro/Escritorio/Nueva carpeta 1/Sombras-del-avismo/src/main/java/com/sombrasdelavismo/JuegoMagos.java
-/home/alejandro/Escritorio/Nueva carpeta 1/Sombras-del-avismo/src/main/java/com/sombrasdelavismo/model/SpellType.java
-/home/alejandro/Escritorio/Nueva carpeta 1/Sombras-del-avismo/src/main/java/com/sombrasdelavismo/model/CreatureCard.java
-/home/alejandro/Escritorio/Nueva carpeta 1/Sombras-del-avismo/src/main/java/com/sombrasdelavismo/Game.java
-/home/alejandro/Escritorio/Nueva carpeta 1/Sombras-del-avismo/src/main/java/com/sombrasdelavismo/CreatureCard.java
+C:\Users\Pc\Desktop\Sombras-del-avismo\Sombras-del-avismo\src\main\java\com\sombrasdelavismo\model\CreatureCard.java
+C:\Users\Pc\Desktop\Sombras-del-avismo\Sombras-del-avismo\src\main\java\com\sombrasdelavismo\Main.java
+C:\Users\Pc\Desktop\Sombras-del-avismo\Sombras-del-avismo\src\main\java\com\sombrasdelavismo\model\ActionResult.java
+C:\Users\Pc\Desktop\Sombras-del-avismo\Sombras-del-avismo\src\main\java\com\sombrasdelavismo\ui\GameFrame.java
+C:\Users\Pc\Desktop\Sombras-del-avismo\Sombras-del-avismo\src\main\java\com\sombrasdelavismo\model\SpellEffect.java
+C:\Users\Pc\Desktop\Sombras-del-avismo\Sombras-del-avismo\src\main\java\com\sombrasdelavismo\model\CardCatalog.java
+C:\Users\Pc\Desktop\Sombras-del-avismo\Sombras-del-avismo\src\main\java\com\sombrasdelavismo\model\Deck.java
+C:\Users\Pc\Desktop\Sombras-del-avismo\Sombras-del-avismo\src\main\java\com\sombrasdelavismo\model\Card.java
+C:\Users\Pc\Desktop\Sombras-del-avismo\Sombras-del-avismo\src\main\java\com\sombrasdelavismo\model\Game.java
+C:\Users\Pc\Desktop\Sombras-del-avismo\Sombras-del-avismo\src\main\java\com\sombrasdelavismo\model\SpellColor.java
+C:\Users\Pc\Desktop\Sombras-del-avismo\Sombras-del-avismo\src\main\java\com\sombrasdelavismo\model\Player.java
+C:\Users\Pc\Desktop\Sombras-del-avismo\Sombras-del-avismo\src\main\java\com\sombrasdelavismo\ui\CardButton.java
+C:\Users\Pc\Desktop\Sombras-del-avismo\Sombras-del-avismo\src\main\java\com\sombrasdelavismo\model\SpellCard.java

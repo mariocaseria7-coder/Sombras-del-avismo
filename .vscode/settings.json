@@ -1,0 +1,7 @@
+{
+  "java.jdt.ls.java.home": "C:\\Program Files\\Eclipse Adoptium\\jdk-17.0.18.8-hotspot",
+  "maven.executable.path": "C:\\Users\\Pc\\tools\\apache-maven-3.9.15\\bin\\mvn.cmd",
+  "maven.terminal.useJavaHome": true,
+  "java.import.maven.enabled": true,
+  "java.configuration.updateBuildConfiguration": "automatic"
+}

@@ -1,154 +1,151 @@
 package com.sombrasdelavismo.model;
 
 public class CreatureCard extends Card {
+    private final int baseAttack;
+    private final int baseHealth;
+    private final boolean slippery;
+    private final boolean bathroomCrew;
     private int attack;
-    private int life;
-    private int maxLife;
-    private boolean canAttack;
-    private boolean canDefend;
-    private boolean tapped;
+    private int health;
     private boolean summoningSickness;
+    private boolean exhausted;
+    private boolean hiddenFromOpponent;
 
-    public CreatureCard(String name, int costMana, int attack, int life, String description, String imagePath) {
-        super(name, costMana, description, imagePath);
-        this.attack = attack;
-        this.life = life;
-        this.maxLife = life;
-        this.canAttack = false;
-        this.canDefend = true;
-        this.tapped = false;
-        this.summoningSickness = true;
+    public CreatureCard(
+            String id,
+            String name,
+            int manaCost,
+            int attack,
+            int health,
+            String description,
+            String imagePath) {
+        this(id, name, manaCost, attack, health, description, imagePath, false, false);
+    }
+
+    public CreatureCard(
+            String id,
+            String name,
+            int manaCost,
+            int attack,
+            int health,
+            String description,
+            String imagePath,
+            boolean slippery,
+            boolean bathroomCrew) {
+        super(id, name, manaCost, description, imagePath);
+        this.baseAttack = attack;
+        this.baseHealth = health;
+        this.slippery = slippery;
+        this.bathroomCrew = bathroomCrew;
+        resetBattleState();
+    }
+
+    public int getBaseAttack() {
+        return baseAttack;
+    }
+
+    public int getBaseHealth() {
+        return baseHealth;
     }
 
     public int getAttack() {
         return attack;
     }
 
-    public void setAttack(int attack) {
-        this.attack = attack;
+    public int getHealth() {
+        return health;
     }
 
-    public int getLife() {
-        return life;
+    public boolean isSlippery() {
+        return slippery;
     }
 
-    public void setLife(int life) {
-        this.life = Math.max(0, life);
+    public boolean isBathroomCrew() {
+        return bathroomCrew;
     }
 
-    public int getMaxLife() {
-        return maxLife;
-    }
-
-    public void setMaxLife(int maxLife) {
-        this.maxLife = maxLife;
-    }
-
-    public boolean isCanAttack() {
-        return canAttack;
-    }
-
-    public void setCanAttack(boolean canAttack) {
-        this.canAttack = canAttack;
-    }
-
-    public boolean isCanDefend() {
-        return canDefend;
-    }
-
-    public void setCanDefend(boolean canDefend) {
-        this.canDefend = canDefend;
-    }
-
-    public boolean isTapped() {
-        return tapped;
-    }
-
-    public void setTapped(boolean tapped) {
-        this.tapped = tapped;
-        this.canDefend = !tapped;
-    }
-
-    public boolean isSummoningSickness() {
+    public boolean hasSummoningSickness() {
         return summoningSickness;
     }
 
-    public void setSummoningSickness(boolean summoningSickness) {
-        this.summoningSickness = summoningSickness;
+    public boolean isExhausted() {
+        return exhausted;
     }
 
-    public void prepararInvocacion() {
-        this.canAttack = false;
-        this.canDefend = true;
-        this.tapped = false;
+    public boolean isHiddenFromOpponent() {
+        return hiddenFromOpponent;
+    }
+
+    public void setHiddenFromOpponent(boolean hiddenFromOpponent) {
+        this.hiddenFromOpponent = hiddenFromOpponent;
+    }
+
+    public void resetBattleState() {
+        this.attack = baseAttack;
+        this.health = baseHealth;
         this.summoningSickness = true;
+        this.exhausted = false;
+        this.hiddenFromOpponent = false;
     }
 
-    public void enderezarParaTurnoPropio() {
-        if (summoningSickness) {
-            summoningSickness = false;
-            canAttack = true;
-        } else {
-            canAttack = true;
+    public void markSummoned() {
+        this.summoningSickness = true;
+        this.exhausted = false;
+    }
+
+    public void startOwnerTurn() {
+        this.summoningSickness = false;
+        this.exhausted = false;
+    }
+
+    public boolean canAttack() {
+        return health > 0 && !summoningSickness && !exhausted;
+    }
+
+    public boolean canDefend() {
+        return health > 0 && !exhausted;
+    }
+
+    public void exhaust() {
+        this.exhausted = true;
+    }
+
+    public void reveal() {
+        this.hiddenFromOpponent = false;
+    }
+
+    public int receiveDamage(int rawDamage) {
+        int appliedDamage = slippery ? Math.max(0, rawDamage - 2) : rawDamage;
+        health = Math.max(0, health - appliedDamage);
+        return appliedDamage;
+    }
+
+    public void addStats(int attackBonus, int healthBonus) {
+        this.attack += attackBonus;
+        this.health += healthBonus;
+    }
+
+    public void setAttackToAtLeast(int targetAttack) {
+        if (attack < targetAttack) {
+            attack = targetAttack;
         }
-        tapped = false;
-        canDefend = true;
     }
 
-    public void girarPorAtaque() {
-        tapped = true;
-        canAttack = false;
-        canDefend = false;
-    }
-
-    public void atacar(CreatureCard objetivo) {
-        if (objetivo != null) {
-            objetivo.recibirDanio(attack);
-        }
-    }
-
-    public void atacar(Player objetivo) {
-        if (objetivo != null) {
-            objetivo.receiveDamage(attack);
-        }
-    }
-
-    public void defender(CreatureCard atacante) {
-        if (atacante != null) {
-            atacante.recibirDanio(attack);
-        }
-    }
-
-    public void recibirDanio(int amount) {
-        life = Math.max(0, life - amount);
-    }
-
-    public void restaurarVidaCompleta() {
-        this.life = this.maxLife;
-    }
-
-    public boolean estaMuerta() {
-        return life <= 0;
-    }
-
-    public void aplicarBuff(int attackBonus, int lifeBonus) {
-        attack += attackBonus;
-        maxLife += lifeBonus;
-        life += lifeBonus;
-    }
-
-    @Override
-    public void usar() {
-        // La resolucion real se gestiona desde Game.
+    public boolean isDead() {
+        return health <= 0;
     }
 
     @Override
     public Card copy() {
-        return new CreatureCard(getName(), getCostMana(), attack, maxLife, getDescription(), getImagePath());
-    }
-
-    @Override
-    public String toString() {
-        return getName() + " [" + attack + "/" + life + "] Mana " + getCostMana();
+        return new CreatureCard(
+                getId(),
+                getName(),
+                getManaCost(),
+                baseAttack,
+                baseHealth,
+                getDescription(),
+                getImagePath(),
+                slippery,
+                bathroomCrew);
     }
 }

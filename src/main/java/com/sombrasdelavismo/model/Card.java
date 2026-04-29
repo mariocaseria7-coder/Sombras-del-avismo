@@ -1,56 +1,47 @@
 package com.sombrasdelavismo.model;
 
 public abstract class Card {
-    private String name;
-    private int costMana;
-    private String description;
-    private String imagePath;
+    private final String id;
+    private final String name;
+    private final int manaCost;
+    private final String description;
+    private final String imagePath;
 
-    public Card(String name, int costMana, String description, String imagePath) {
+    protected Card(String id, String name, int manaCost, String description, String imagePath) {
+        this.id = id;
         this.name = name;
-        this.costMana = costMana;
+        this.manaCost = manaCost;
         this.description = description;
         this.imagePath = imagePath;
+    }
+
+    public String getId() {
+        return id;
     }
 
     public String getName() {
         return name;
     }
 
-    public void setName(String name) {
-        this.name = name;
-    }
-
-    public int getCostMana() {
-        return costMana;
-    }
-
-    public void setCostMana(int costMana) {
-        this.costMana = costMana;
+    public int getManaCost() {
+        return manaCost;
     }
 
     public String getDescription() {
         return description;
     }
 
-    public void setDescription(String description) {
-        this.description = description;
-    }
-
     public String getImagePath() {
         return imagePath;
     }
 
-    public void setImagePath(String imagePath) {
-        this.imagePath = imagePath;
+    public boolean isCreature() {
+        return this instanceof CreatureCard;
     }
 
-    public abstract void usar();
+    public boolean isSpell() {
+        return this instanceof SpellCard;
+    }
 
     public abstract Card copy();
-
-    @Override
-    public String toString() {
-        return name + " (Mana " + costMana + ")";
-    }
 }

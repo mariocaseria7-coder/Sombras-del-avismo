@@ -1,39 +1,42 @@
-# Sombras del Avismo
+# Sombras del Abismo
 
-Juego de cartas en Java con Swing, pensado para ser sencillo, rápido de entender y jugable desde el primer turno.
+Juego de cartas por turnos en Java POO con interfaz grafica Swing.
 
-## Estado actual
+## Que incluye
 
-El juego incluye:
+- Partida hot-seat para 2 jugadores.
+- Tablero grafico con mano, criaturas, log, vida y contador de mana.
+- Mana adaptado al mazo del proyecto: sube de 5 en 5 hasta 30.
+- Mareo de invocacion, combate, defensa y fatiga por robar sin mazo.
+- Cartas y hechizos personalizados del proyecto: `Panda`, `Carpazo`, `En Chino`, `El Grito`, `Humo`, `Hacker`, `Kung Fu`, `Fuego`, `Simeone`, `Bano`, etc.
+- Combo de `Adrian + Fabio + Fernando + Bano` para desbloquear `Humo`.
 
-- Turnos alternos entre dos jugadores
-- Mana que crece turno a turno
-- Criaturas que entran cansadas y atacan a partir de tu siguiente turno
-- Hechizos de dano, curacion y robo
-- Vista previa de cartas, registro de partida y coleccion visual
-- Tests automáticos para la lógica principal del juego
+## Estructura
 
-## Cómo ejecutar
+- `src/main/java/com/sombrasdelavismo/model`: logica del juego.
+- `src/main/java/com/sombrasdelavismo/ui`: interfaz Swing.
+- `src/main/java/com/sombrasdelavismo/Main.java`: punto de entrada.
 
-Con Maven:
+## Como ejecutarlo en VSCode
 
-1. `mvn compile`
-2. `mvn exec:java`
+1. Abre la carpeta del proyecto.
+2. Asegurate de tener una extension de Java y un JDK configurado en VSCode.
+3. Ejecuta `Main.java`.
 
-Sin Maven:
+## Tests
 
-1. `javac src/main/java/com/sombrasdelavismo/*.java`
-2. `java -cp src/main/java com.sombrasdelavismo.Main`
+Los tests cubren reglas clave:
 
-## Cómo validar
+- mareo de invocacion
+- invocacion de Lin con `En Chino`
+- desbloqueo de `Humo` con `Bano`
+- ocultacion de criaturas con `Humo`
+- robo de cartas con `Hacker`
 
-- `mvn test`
+## Suposiciones tomadas
 
-## Reglas rápidas
-
-1. Al empezar tu turno robas una carta y recuperas todo el mana.
-2. Puedes jugar varias cartas si te alcanza el mana.
-3. Las criaturas no pueden atacar el turno en que se juegan.
-4. En tu siguiente turno, esas criaturas ya podrán atacar.
-5. Los hechizos se resuelven al instante.
-6. Gana quien deje al rival a 0 vidas.
+- El mazo de ambos jugadores es identico para que la partida sea jugable desde el primer momento.
+- `Marco` reduce en 2 el danio que recibe para reflejar que es dificil de tocar.
+- `Panda` potencia especialmente a `Marco`.
+- `Mono A` invoca una ficha `Mono A` 3/2.
+- `Humo` necesita haberse desbloqueado antes con `Bano`.

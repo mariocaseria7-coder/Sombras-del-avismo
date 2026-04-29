@@ -1,7 +1,10 @@
 package com.sombrasdelavismo;
 
+import com.sombrasdelavismo.ui.GameFrame;
+import javax.swing.SwingUtilities;
+
 public class Main {
     public static void main(String[] args) {
-        new JuegoMagos().iniciarJuego();
+        SwingUtilities.invokeLater(GameFrame::new);
     }
 }

@@ -1,0 +1,55 @@
+{
+  "version": "2.0.0",
+  "tasks": [
+    {
+      "label": "Compile Main",
+      "type": "process",
+      "command": "C:\\Users\\Pc\\tools\\apache-maven-3.9.15\\bin\\mvn.cmd",
+      "args": [
+        "-Dmaven.repo.local=${workspaceFolder}\\.m2\\repository",
+        "-DskipTests",
+        "compile"
+      ],
+      "group": "build",
+      "problemMatcher": [],
+      "options": {
+        "env": {
+          "JAVA_HOME": "C:\\Program Files\\Eclipse Adoptium\\jdk-17.0.18.8-hotspot"
+        }
+      }
+    },
+    {
+      "label": "Run Game",
+      "type": "process",
+      "command": "C:\\Users\\Pc\\tools\\apache-maven-3.9.15\\bin\\mvn.cmd",
+      "args": [
+        "-Dmaven.repo.local=${workspaceFolder}\\.m2\\repository",
+        "-DskipTests",
+        "compile",
+        "exec:java"
+      ],
+      "problemMatcher": [],
+      "options": {
+        "env": {
+          "JAVA_HOME": "C:\\Program Files\\Eclipse Adoptium\\jdk-17.0.18.8-hotspot"
+        }
+      }
+    },
+    {
+      "label": "Maven Test",
+      "type": "process",
+      "command": "C:\\Users\\Pc\\tools\\apache-maven-3.9.15\\bin\\mvn.cmd",
+      "args": [
+        "-Dmaven.repo.local=${workspaceFolder}\\.m2\\repository",
+        "test"
+      ],
+      "group": "test",
+      "problemMatcher": [],
+      "options": {
+        "env": {
+          "JAVA_HOME": "C:\\Program Files\\Eclipse Adoptium\\jdk-17.0.18.8-hotspot"
+        }
+      }
+    }
+  ]
+}
