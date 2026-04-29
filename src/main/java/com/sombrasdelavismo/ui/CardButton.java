@@ -12,14 +12,9 @@ import java.awt.Graphics2D;
 import java.awt.RenderingHints;
 import java.awt.geom.RoundRectangle2D;
 import java.awt.image.BufferedImage;
-import java.io.InputStream;
-import java.util.HashMap;
-import java.util.Map;
-import javax.imageio.ImageIO;
 import javax.swing.JToggleButton;
 
 public class CardButton extends JToggleButton {
-    private static final Map<String, BufferedImage> IMAGE_CACHE = new HashMap<>();
     private static final Dimension DEFAULT_SIZE = new Dimension(172, 252);
 
     private final String title;
@@ -28,7 +23,7 @@ public class CardButton extends JToggleButton {
     private final String description;
     private final String footer;
     private final Color accent;
-    private final BufferedImage artwork;
+    private final ImageUtils.ResolvedImage artwork;
     private final boolean hiddenCard;
 
     public CardButton(
@@ -59,7 +54,7 @@ public class CardButton extends JToggleButton {
         this.description = description;
         this.footer = footer;
         this.accent = accent;
-        this.artwork = hiddenCard ? null : loadImage(imagePath);
+        this.artwork = hiddenCard ? null : ImageUtils.resolveCardImage(imagePath);
         this.hiddenCard = hiddenCard;
 
         setOpaque(false);
@@ -173,7 +168,10 @@ public class CardButton extends JToggleButton {
 
     private void drawArtwork(Graphics2D g2, int x, int y, int width, int height, int arc, boolean overlay) {
         if (artwork != null) {
-            BufferedImage scaled = scaleImageToFit(artwork, width, height);
+            BufferedImage scaled = ImageUtils.getScaledToFit(artwork, width, height, false);
+            if (scaled == null) {
+                return;
+            }
             int drawX = x + ((width - scaled.getWidth()) / 2);
             int drawY = y + ((height - scaled.getHeight()) / 2);
             g2.setClip(new RoundRectangle2D.Float(x, y, width, height, arc, arc));
@@ -212,46 +210,6 @@ public class CardButton extends JToggleButton {
     private String buildTooltip() {
         return "<html><div style='width:260px'><b>" + title + "</b><br><br>" + description
                 + "<br><br><i>" + footer + "</i></div></html>";
-    }
-
-    private static BufferedImage loadImage(String imagePath) {
-        if (imagePath == null || imagePath.isBlank()) {
-            return null;
-        }
-
-        if (IMAGE_CACHE.containsKey(imagePath)) {
-            return IMAGE_CACHE.get(imagePath);
-        }
-
-        try (InputStream stream = CardButton.class.getClassLoader().getResourceAsStream(imagePath)) {
-            if (stream == null) {
-                IMAGE_CACHE.put(imagePath, null);
-                return null;
-            }
-            BufferedImage image = ImageIO.read(stream);
-            IMAGE_CACHE.put(imagePath, image);
-            return image;
-        } catch (Exception exception) {
-            IMAGE_CACHE.put(imagePath, null);
-            return null;
-        }
-    }
-
-    private BufferedImage scaleImageToFit(BufferedImage source, int maxWidth, int maxHeight) {
-        double ratio = Math.min((double) maxWidth / source.getWidth(), (double) maxHeight / source.getHeight());
-        ratio = Math.min(ratio, 1.0d);
-
-        int scaledWidth = Math.max(1, (int) Math.round(source.getWidth() * ratio));
-        int scaledHeight = Math.max(1, (int) Math.round(source.getHeight() * ratio));
-        BufferedImage scaled = new BufferedImage(scaledWidth, scaledHeight, BufferedImage.TYPE_INT_ARGB);
-
-        Graphics2D imageGraphics = scaled.createGraphics();
-        imageGraphics.setRenderingHint(RenderingHints.KEY_INTERPOLATION, RenderingHints.VALUE_INTERPOLATION_BICUBIC);
-        imageGraphics.setRenderingHint(RenderingHints.KEY_RENDERING, RenderingHints.VALUE_RENDER_QUALITY);
-        imageGraphics.setRenderingHint(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_ON);
-        imageGraphics.drawImage(source, 0, 0, scaledWidth, scaledHeight, null);
-        imageGraphics.dispose();
-        return scaled;
     }
 
     private void drawTrimmedText(Graphics2D g2, String text, int x, int y, int width) {

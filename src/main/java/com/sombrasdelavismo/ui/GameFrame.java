@@ -13,16 +13,12 @@ import java.awt.Component;
 import java.awt.Dimension;
 import java.awt.FlowLayout;
 import java.awt.Font;
-import java.awt.Graphics2D;
 import java.awt.GridLayout;
-import java.awt.RenderingHints;
 import java.awt.event.MouseAdapter;
 import java.awt.event.MouseEvent;
 import java.awt.image.BufferedImage;
-import java.io.InputStream;
 import java.util.ArrayList;
 import java.util.List;
-import javax.imageio.ImageIO;
 import javax.swing.BorderFactory;
 import javax.swing.Box;
 import javax.swing.BoxLayout;
@@ -956,7 +952,8 @@ public class GameFrame extends JFrame {
     }
 
     private Component buildInspectorVisual(CardViewData view) {
-        JLabel artworkLabel = buildInspectorArtwork(view.imagePath(), view.hidden());
+        ImageUtils.ResolvedImage inspectorImage = ImageUtils.resolveInspectorImage(view.imagePath(), view.title());
+        JLabel artworkLabel = buildInspectorArtwork(inspectorImage, view.hidden());
         if (artworkLabel != null) {
             return artworkLabel;
         }
@@ -976,18 +973,19 @@ public class GameFrame extends JFrame {
         return inspectorCard;
     }
 
-    private JLabel buildInspectorArtwork(String imagePath, boolean hidden) {
-        if (hidden) {
+    private JLabel buildInspectorArtwork(ImageUtils.ResolvedImage inspectorImage, boolean hidden) {
+        if (hidden || inspectorImage == null) {
             return null;
         }
 
-        BufferedImage image = loadInspectorImage(imagePath);
-        if (image == null) {
+        // We intentionally avoid upscaling here: if the source is smaller than the available
+        // area, showing it at native size is usually sharper than stretching it.
+        // If you later add 800x1120 or 1000x1400 cards, increase the 470x690 bounds and the
+        // inspector dialog size instead of forcing blurrier upscaling.
+        BufferedImage scaledImage = ImageUtils.getScaledToFit(inspectorImage, 470, 690, false);
+        if (scaledImage == null) {
             return null;
         }
-
-        Dimension scaledSize = scaleToFit(image.getWidth(), image.getHeight(), 470, 690);
-        BufferedImage scaledImage = scaleInspectorImage(image, scaledSize.width, scaledSize.height);
 
         JLabel label = new JLabel(new ImageIcon(scaledImage));
         label.setOpaque(true);
@@ -996,40 +994,8 @@ public class GameFrame extends JFrame {
         label.setBorder(BorderFactory.createCompoundBorder(
                 BorderFactory.createLineBorder(new Color(255, 255, 255, 18)),
                 new EmptyBorder(10, 10, 10, 10)));
-        label.setPreferredSize(new Dimension(scaledSize.width + 22, scaledSize.height + 22));
+        label.setPreferredSize(new Dimension(scaledImage.getWidth() + 22, scaledImage.getHeight() + 22));
         return label;
-    }
-
-    private BufferedImage loadInspectorImage(String imagePath) {
-        if (imagePath == null || imagePath.isBlank()) {
-            return null;
-        }
-
-        try (InputStream stream = GameFrame.class.getClassLoader().getResourceAsStream(imagePath)) {
-            if (stream == null) {
-                return null;
-            }
-            return ImageIO.read(stream);
-        } catch (Exception exception) {
-            return null;
-        }
-    }
-
-    private Dimension scaleToFit(int width, int height, int maxWidth, int maxHeight) {
-        double ratio = Math.min((double) maxWidth / width, (double) maxHeight / height);
-        ratio = Math.min(ratio, 1.0d);
-        return new Dimension((int) Math.round(width * ratio), (int) Math.round(height * ratio));
-    }
-
-    private BufferedImage scaleInspectorImage(BufferedImage source, int targetWidth, int targetHeight) {
-        BufferedImage scaled = new BufferedImage(targetWidth, targetHeight, BufferedImage.TYPE_INT_ARGB);
-        Graphics2D graphics = scaled.createGraphics();
-        graphics.setRenderingHint(RenderingHints.KEY_INTERPOLATION, RenderingHints.VALUE_INTERPOLATION_BICUBIC);
-        graphics.setRenderingHint(RenderingHints.KEY_RENDERING, RenderingHints.VALUE_RENDER_QUALITY);
-        graphics.setRenderingHint(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_ON);
-        graphics.drawImage(source, 0, 0, targetWidth, targetHeight, null);
-        graphics.dispose();
-        return scaled;
     }
 
     private String buildInspectorNotes(Card card, boolean hidden) {

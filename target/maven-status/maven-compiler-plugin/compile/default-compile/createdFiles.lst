@@ -5,6 +5,7 @@ com\sombrasdelavismo\model\CardCatalog.class
 com\sombrasdelavismo\ui\GameFrame$1.class
 com\sombrasdelavismo\model\ActionResult.class
 com\sombrasdelavismo\model\SpellEffect.class
+com\sombrasdelavismo\ui\GameFrame$2.class
 com\sombrasdelavismo\Main.class
 com\sombrasdelavismo\model\Deck.class
 com\sombrasdelavismo\ui\GameFrame.class
