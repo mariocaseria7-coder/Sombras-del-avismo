@@ -32,15 +32,23 @@ public final class CardCatalog {
         return (SpellCard) createCard(id);
     }
 
+    public static List<Card> createAlbumCards() {
+        List<Card> cards = new ArrayList<>();
+        for (Card card : PROTOTYPES.values()) {
+            cards.add(card.copy());
+        }
+        return cards;
+    }
+
     public static List<Card> createDefaultDeck() {
         List<Card> deck = new ArrayList<>();
 
-        add(deck, "ADRIAN", 1);
-        add(deck, "FABIO", 1);
-        add(deck, "FERNANDO", 1);
-        add(deck, "ANTONIO", 1);
-        add(deck, "INES", 1);
-        add(deck, "URBANO", 1);
+        add(deck, "ADRIAN", 3);
+        add(deck, "FABIO", 3);
+        add(deck, "FERNANDO", 3);
+        add(deck, "ANTONIO", 4);
+        add(deck, "INES", 4);
+        add(deck, "URBANO", 3);
         add(deck, "CARMEN", 1);
         add(deck, "LIN", 1);
         add(deck, "QUEMO", 1);
@@ -53,24 +61,24 @@ public final class CardCatalog {
         add(deck, "MARIO_R", 1);
         add(deck, "ALEJANDRO", 1);
         add(deck, "LUIS", 1);
-        add(deck, "MAMEN", 1);
+        add(deck, "MAMEN", 2);
         add(deck, "DIEGO", 1);
         add(deck, "JUANMA", 1);
         add(deck, "MARCO", 1);
 
         add(deck, "PANDA", 1);
-        add(deck, "CARPAZO", 3);
+        add(deck, "CARPAZO", 2);
         add(deck, "EN_CHINO", 1);
-        add(deck, "EL_GRITO", 3);
+        add(deck, "EL_GRITO", 2);
         add(deck, "MONO_A", 1);
         add(deck, "SCANNER", 1);
         add(deck, "APUESTA", 2);
         add(deck, "HUMO", 2);
-        add(deck, "HACKER", 2);
+        add(deck, "HACKER", 1);
         add(deck, "KUNG_FU", 1);
         add(deck, "FUEGO", 1);
         add(deck, "SIMEONE", 1);
-        add(deck, "BANO", 1);
+        add(deck, "BANO", 2);
 
         return deck;
     }
@@ -90,6 +98,7 @@ public final class CardCatalog {
                 6,
                 "Complicado de tocar. Reduce en 2 el daño que recibe.",
                 "cards/createcard marco.jpg",
+                CardRarity.MYTHIC,
                 true,
                 false));
         register(new CreatureCard(
@@ -99,7 +108,8 @@ public final class CardCatalog {
                 7,
                 4,
                 "Pega fuerte y combina con Carpazo.",
-                "cards/createcard juanma.jpg"));
+                "cards/createcard juanma.jpg",
+                CardRarity.EPIC));
         register(new CreatureCard(
                 "DIEGO",
                 "Dieguito",
@@ -107,7 +117,8 @@ public final class CardCatalog {
                 5,
                 6,
                 "El maestro de En Chino. Puede traer a Lin al tablero.",
-                "cards/createcard dieguitoo.jpg"));
+                "cards/createcard dieguitoo.jpg",
+                CardRarity.EPIC));
         register(new CreatureCard(
                 "MAMEN",
                 "Mamén",
@@ -115,7 +126,8 @@ public final class CardCatalog {
                 3,
                 8,
                 "Aguanta la mesa mientras prepara El Grito.",
-                "cards/createcard mamen.jpg"));
+                "cards/createcard mamen.jpg",
+                CardRarity.EPIC));
         register(new CreatureCard(
                 "LUIS",
                 "Luismi el Nano",
@@ -123,7 +135,8 @@ public final class CardCatalog {
                 2,
                 5,
                 "Genera apoyo con Mono A.",
-                "cards/createcard luismiii.jpg"));
+                "cards/createcard luismiii.jpg",
+                CardRarity.RARE));
         register(new CreatureCard(
                 "ALEJANDRO",
                 "Crespo",
@@ -131,7 +144,8 @@ public final class CardCatalog {
                 3,
                 4,
                 "Controla la información del rival con Scanner.",
-                "cards/createcard crespo.jpg"));
+                "cards/createcard crespo.jpg",
+                CardRarity.RARE));
         register(new CreatureCard(
                 "MARIO_R",
                 "Rodri el ludopata",
@@ -139,7 +153,8 @@ public final class CardCatalog {
                 4,
                 3,
                 "Gana maná extra si aparece Apuesta.",
-                "cards/createcard rodri.jpg"));
+                "cards/createcard rodri.jpg",
+                CardRarity.RARE));
         register(new CreatureCard(
                 "MARIO_A",
                 "Marito el Tipster",
@@ -147,7 +162,8 @@ public final class CardCatalog {
                 1,
                 6,
                 "Resiste mucho y ayuda a rentabilizar Apuesta.",
-                "cards/createcard marito.jpg"));
+                "cards/createcard marito.jpg",
+                CardRarity.RARE));
         register(new CreatureCard(
                 "FRAN",
                 "Fran el Vapeador",
@@ -155,7 +171,8 @@ public final class CardCatalog {
                 5,
                 2,
                 "Aprovecha el humo para confundir al rival.",
-                "cards/createcard fran.jpg"));
+                "cards/createcard fran.jpg",
+                CardRarity.RARE));
         register(new CreatureCard(
                 "PEDRO",
                 "Pedrito sin prisas",
@@ -163,7 +180,8 @@ public final class CardCatalog {
                 3,
                 4,
                 "Aprovecha el humo para ocultar jugadas.",
-                "cards/createcard pedro.jpg"));
+                "cards/createcard pedro.jpg",
+                CardRarity.RARE));
         register(new CreatureCard(
                 "JAVI",
                 "Javi",
@@ -171,7 +189,8 @@ public final class CardCatalog {
                 4,
                 3,
                 "Acompaña al hechizo Hacker.",
-                "cards/createcard javi medio.jpg"));
+                "cards/createcard javi medio.jpg",
+                CardRarity.RARE));
         register(new CreatureCard(
                 "LIN",
                 "Lin el Matador",
@@ -179,7 +198,8 @@ public final class CardCatalog {
                 6,
                 4,
                 "Kung Fu puede subir su ataque hasta 10.",
-                "cards/createcard Lin.jpg"));
+                "cards/createcard Lin.jpg",
+                CardRarity.RARE));
         register(new CreatureCard(
                 "QUEMO",
                 "El Quemao",
@@ -187,7 +207,8 @@ public final class CardCatalog {
                 2,
                 5,
                 "Su fuego desgasta toda la mesa.",
-                "cards/createcard quemao.jpg"));
+                "cards/createcard quemao.jpg",
+                CardRarity.RARE));
         register(new CreatureCard(
                 "JAVI_B",
                 "Javi B",
@@ -195,7 +216,8 @@ public final class CardCatalog {
                 5,
                 2,
                 "Otra vía para lanzar Hacker.",
-                "cards/createcard javi medio.jpg"));
+                "cards/createcard javi medio.jpg",
+                CardRarity.RARE));
         register(new CreatureCard(
                 "FRAN_A",
                 "Alonso",
@@ -203,7 +225,8 @@ public final class CardCatalog {
                 4,
                 6,
                 "Simeone protege al equipo durante una ronda.",
-                "cards/createcard alonsoo.jpg"));
+                "cards/createcard alonsoo.jpg",
+                CardRarity.RARE));
         register(new CreatureCard(
                 "CARMEN",
                 "Carmen",
@@ -211,7 +234,8 @@ public final class CardCatalog {
                 5,
                 6,
                 "Una de las criaturas más sólidas del mazo.",
-                "cards/createcard carmenn.jpg"));
+                "cards/createcard carmenn.jpg",
+                CardRarity.RARE));
         register(new CreatureCard(
                 "URBANO",
                 "Urbano",
@@ -219,7 +243,8 @@ public final class CardCatalog {
                 3,
                 1,
                 "Sale rápido para presionar en los primeros turnos.",
-                "cards/createcard urbano.jpg"));
+                "cards/createcard urbano.jpg",
+                CardRarity.COMMON));
         register(new CreatureCard(
                 "INES",
                 "Inés",
@@ -227,7 +252,8 @@ public final class CardCatalog {
                 2,
                 2,
                 "Criatura de apoyo para comenzar la partida.",
-                "cards/createcard inees.jpg"));
+                "cards/createcard inees.jpg",
+                CardRarity.COMMON));
         register(new CreatureCard(
                 "ANTONIO",
                 "Antonio",
@@ -235,7 +261,8 @@ public final class CardCatalog {
                 2,
                 2,
                 "Criatura equilibrada de apertura.",
-                "cards/createcard antonioo.jpg"));
+                "cards/createcard antonioo.jpg",
+                CardRarity.COMMON));
         register(new CreatureCard(
                 "ADRIAN",
                 "Adrian",
@@ -244,6 +271,7 @@ public final class CardCatalog {
                 3,
                 "Miembro del combo de Baño.",
                 "cards/createcard adrian.jpg",
+                CardRarity.COMMON,
                 false,
                 true));
         register(new CreatureCard(
@@ -254,6 +282,7 @@ public final class CardCatalog {
                 3,
                 "Miembro del combo de Baño.",
                 "cards/createcard fabio.jpg",
+                CardRarity.COMMON,
                 false,
                 true));
         register(new CreatureCard(
@@ -264,6 +293,7 @@ public final class CardCatalog {
                 3,
                 "Miembro del combo de Baño.",
                 "cards/createcard Fernando.jpg",
+                CardRarity.COMMON,
                 false,
                 true));
         register(new CreatureCard(
@@ -273,7 +303,8 @@ public final class CardCatalog {
                 3,
                 2,
                 "Ficha invocada por el hechizo Mono A.",
-                null));
+                null,
+                CardRarity.COMMON));
     }
 
     private static void registerSpells() {

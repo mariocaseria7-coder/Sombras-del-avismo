@@ -82,12 +82,11 @@ public class CardButton extends JToggleButton {
         boolean preview = height >= 390;
         boolean artworkCard = artwork != null && !hiddenCard;
 
-        int outerPad = compact ? 8 : 10;
-        int titleHeight = preview ? 34 : compact ? 24 : 28;
-        int manaBubbleSize = preview ? 38 : compact ? 28 : 32;
-        int artHeight = preview ? 250 : compact ? 116 : 156;
-        int footerHeight = preview ? 30 : compact ? 24 : 26;
-        int arc = preview ? 28 : compact ? 18 : 22;
+        int outerPad = compact ? Math.max(5, height / 26) : 9;
+        int titleHeight = preview ? 34 : compact ? Math.max(18, height / 7) : 28;
+        int manaBubbleSize = preview ? 38 : compact ? Math.max(22, Math.min(28, width / 4)) : 32;
+        int footerHeight = preview ? 30 : compact ? Math.max(18, height / 7) : 26;
+        int arc = preview ? 22 : compact ? 14 : 18;
 
         RoundRectangle2D card = new RoundRectangle2D.Float(0, 0, width, height, arc, arc);
         Color topColor = hiddenCard ? new Color(38, 41, 54) : accent.brighter();
@@ -95,7 +94,7 @@ public class CardButton extends JToggleButton {
         g2.setPaint(new GradientPaint(0, 0, topColor, 0, height, bottomColor));
         g2.fill(card);
 
-        g2.setColor(new Color(255, 255, 255, 18));
+        g2.setColor(new Color(255, 255, 255, 10));
         g2.fillRoundRect(outerPad, outerPad, width - (outerPad * 2), height - (outerPad * 2), arc - 6, arc - 6);
 
         int footerY = height - outerPad - footerHeight;
@@ -107,9 +106,11 @@ public class CardButton extends JToggleButton {
             drawArtwork(g2, artX, artY, artWidth, artHeightFull, compact ? 14 : 18, false);
         } else {
             int artX = outerPad + 2;
-            int artY = outerPad + titleHeight + 10;
+            int artY = outerPad + titleHeight + (compact ? 5 : 10);
             int artWidth = width - ((outerPad + 2) * 2);
-            int artBottomGap = compact ? 16 : 18;
+            int artBottomGap = compact ? 6 : 18;
+            int typeSpace = compact ? 14 : 18;
+            int artHeight = Math.max(28, footerY - artY - artBottomGap - typeSpace);
             int typeY = artY + artHeight + artBottomGap;
 
             drawArtwork(g2, artX, artY, artWidth, artHeight, compact ? 12 : 16, true);
@@ -154,8 +155,8 @@ public class CardButton extends JToggleButton {
         g2.setFont(new Font("SansSerif", Font.BOLD, preview ? 14 : compact ? 10 : 12));
         drawCenteredText(g2, footer, outerPad, footerY, width - (outerPad * 2), footerHeight, g2.getFont(), g2.getColor());
 
-        g2.setStroke(new BasicStroke(isSelected() ? 3f : 2f));
-        g2.setColor(isSelected() ? new Color(255, 227, 144) : new Color(255, 255, 255, 92));
+        g2.setStroke(new BasicStroke(isSelected() ? 1.8f : compact ? 0.8f : 1.0f));
+        g2.setColor(isSelected() ? new Color(255, 224, 132, 230) : new Color(255, 255, 255, compact ? 36 : 48));
         g2.draw(card);
 
         if (!isEnabled()) {
@@ -188,7 +189,7 @@ public class CardButton extends JToggleButton {
                         new Color(0, 0, 0, 118)));
                 g2.fillRoundRect(x, y, width, height, arc, arc);
             }
-            g2.setColor(new Color(255, 255, 255, 24));
+            g2.setColor(new Color(255, 255, 255, 16));
             g2.drawRoundRect(x, y, width, height, arc, arc);
             return;
         }

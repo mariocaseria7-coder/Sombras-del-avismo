@@ -18,7 +18,23 @@ public class SpellCard extends Card {
             String relatedCardId,
             String description,
             String imagePath) {
-        super(id, name, manaCost, description, imagePath);
+        this(id, name, manaCost, CardRarity.SPELL, effect, color, primaryValue,
+                secondaryValue, relatedCardId, description, imagePath);
+    }
+
+    public SpellCard(
+            String id,
+            String name,
+            int manaCost,
+            CardRarity rarity,
+            SpellEffect effect,
+            SpellColor color,
+            int primaryValue,
+            int secondaryValue,
+            String relatedCardId,
+            String description,
+            String imagePath) {
+        super(id, name, manaCost, rarity, description, imagePath);
         this.effect = effect;
         this.color = color;
         this.primaryValue = primaryValue;
@@ -56,6 +72,7 @@ public class SpellCard extends Card {
                 getId(),
                 getName(),
                 getManaCost(),
+                getRarity(),
                 effect,
                 color,
                 primaryValue,

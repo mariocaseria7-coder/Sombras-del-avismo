@@ -3,12 +3,15 @@ package com.sombrasdelavismo;
 import com.sombrasdelavismo.model.ActionResult;
 import com.sombrasdelavismo.model.Card;
 import com.sombrasdelavismo.model.CardCatalog;
+import com.sombrasdelavismo.model.CardRarity;
 import com.sombrasdelavismo.model.CreatureCard;
 import com.sombrasdelavismo.model.Game;
 import com.sombrasdelavismo.model.Player;
 import com.sombrasdelavismo.model.SpellCard;
 import java.util.ArrayList;
+import java.util.EnumMap;
 import java.util.List;
+import java.util.Map;
 import org.junit.jupiter.api.Test;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
@@ -134,6 +137,55 @@ class GameTest {
         assertFalse(copy.isExhausted());
         assertTrue(copy.hasSummoningSickness());
         assertEquals(copy.getBaseHealth(), copy.getHealth());
+    }
+
+    @Test
+    void creatureRaritiesMatchCatalog() {
+        assertEquals(CardRarity.MYTHIC, CardCatalog.createCreature("MARCO").getRarity());
+        assertEquals(CardRarity.EPIC, CardCatalog.createCreature("JUANMA").getRarity());
+        assertEquals(CardRarity.EPIC, CardCatalog.createCreature("DIEGO").getRarity());
+        assertEquals(CardRarity.EPIC, CardCatalog.createCreature("MAMEN").getRarity());
+
+        assertEquals(CardRarity.RARE, CardCatalog.createCreature("LUIS").getRarity());
+        assertEquals(CardRarity.RARE, CardCatalog.createCreature("ALEJANDRO").getRarity());
+        assertEquals(CardRarity.RARE, CardCatalog.createCreature("MARIO_R").getRarity());
+        assertEquals(CardRarity.RARE, CardCatalog.createCreature("MARIO_A").getRarity());
+        assertEquals(CardRarity.RARE, CardCatalog.createCreature("FRAN").getRarity());
+        assertEquals(CardRarity.RARE, CardCatalog.createCreature("PEDRO").getRarity());
+        assertEquals(CardRarity.RARE, CardCatalog.createCreature("JAVI").getRarity());
+        assertEquals(CardRarity.RARE, CardCatalog.createCreature("LIN").getRarity());
+        assertEquals(CardRarity.RARE, CardCatalog.createCreature("QUEMO").getRarity());
+        assertEquals(CardRarity.RARE, CardCatalog.createCreature("JAVI_B").getRarity());
+        assertEquals(CardRarity.RARE, CardCatalog.createCreature("FRAN_A").getRarity());
+        assertEquals(CardRarity.RARE, CardCatalog.createCreature("CARMEN").getRarity());
+
+        assertEquals(CardRarity.COMMON, CardCatalog.createCreature("URBANO").getRarity());
+        assertEquals(CardRarity.COMMON, CardCatalog.createCreature("INES").getRarity());
+        assertEquals(CardRarity.COMMON, CardCatalog.createCreature("ANTONIO").getRarity());
+        assertEquals(CardRarity.COMMON, CardCatalog.createCreature("ADRIAN").getRarity());
+        assertEquals(CardRarity.COMMON, CardCatalog.createCreature("FABIO").getRarity());
+        assertEquals(CardRarity.COMMON, CardCatalog.createCreature("FERNANDO").getRarity());
+    }
+
+    @Test
+    void defaultDeckUsesBalancedRarityCopies() {
+        List<Card> deck = CardCatalog.createDefaultDeck();
+        Map<CardRarity, Integer> rarityCounts = countRarities(deck);
+
+        assertEquals(55, deck.size());
+        assertEquals(1, rarityCounts.get(CardRarity.MYTHIC));
+        assertEquals(4, rarityCounts.get(CardRarity.EPIC));
+        assertEquals(12, rarityCounts.get(CardRarity.RARE));
+        assertEquals(20, rarityCounts.get(CardRarity.COMMON));
+        assertEquals(18, rarityCounts.get(CardRarity.SPELL));
+    }
+
+    private Map<CardRarity, Integer> countRarities(List<Card> cards) {
+        Map<CardRarity, Integer> rarityCounts = new EnumMap<>(CardRarity.class);
+        for (Card card : cards) {
+            rarityCounts.merge(card.getRarity(), 1, Integer::sum);
+        }
+        return rarityCounts;
     }
 
     private Player createPlayer(String name) {

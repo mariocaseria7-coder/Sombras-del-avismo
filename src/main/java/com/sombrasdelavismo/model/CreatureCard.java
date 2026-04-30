@@ -19,7 +19,19 @@ public class CreatureCard extends Card {
             int health,
             String description,
             String imagePath) {
-        this(id, name, manaCost, attack, health, description, imagePath, false, false);
+        this(id, name, manaCost, attack, health, description, imagePath, CardRarity.COMMON);
+    }
+
+    public CreatureCard(
+            String id,
+            String name,
+            int manaCost,
+            int attack,
+            int health,
+            String description,
+            String imagePath,
+            CardRarity rarity) {
+        this(id, name, manaCost, attack, health, description, imagePath, rarity, false, false);
     }
 
     public CreatureCard(
@@ -32,7 +44,21 @@ public class CreatureCard extends Card {
             String imagePath,
             boolean slippery,
             boolean bathroomCrew) {
-        super(id, name, manaCost, description, imagePath);
+        this(id, name, manaCost, attack, health, description, imagePath, CardRarity.COMMON, slippery, bathroomCrew);
+    }
+
+    public CreatureCard(
+            String id,
+            String name,
+            int manaCost,
+            int attack,
+            int health,
+            String description,
+            String imagePath,
+            CardRarity rarity,
+            boolean slippery,
+            boolean bathroomCrew) {
+        super(id, name, manaCost, rarity, description, imagePath);
         this.baseAttack = attack;
         this.baseHealth = health;
         this.slippery = slippery;
@@ -145,6 +171,7 @@ public class CreatureCard extends Card {
                 baseHealth,
                 getDescription(),
                 getImagePath(),
+                getRarity(),
                 slippery,
                 bathroomCrew);
     }
