@@ -135,6 +135,9 @@ public class Player {
     }
 
     public boolean spendMana(int amount) {
+        if (amount < 0) {
+            return true;
+        }
         if (amount > currentMana) {
             return false;
         }
@@ -143,6 +146,9 @@ public class Player {
     }
 
     public void increaseMaxMana(int amount, int manaCap) {
+        if (amount < 0 || manaCap < 0) {
+            return;
+        }
         maxMana = Math.min(manaCap, maxMana + amount);
     }
 
@@ -151,19 +157,31 @@ public class Player {
     }
 
     public void boostMana(int amount, int manaCap) {
+        if (amount < 0 || manaCap < 0) {
+            return;
+        }
         maxMana = Math.min(manaCap, maxMana + amount);
         currentMana = Math.min(maxMana, currentMana + amount);
     }
 
     public void receiveDamage(int damage) {
+        if (damage < 0) {
+            return;
+        }
         life = Math.max(0, life - damage);
     }
 
     public void heal(int amount) {
-        life += Math.max(0, amount);
+        if (amount < 0) {
+            return;
+        }
+        life += amount;
     }
 
     public boolean removeFromHand(Card card) {
+        if (card == null) {
+            return false;
+        }
         return hand.remove(card);
     }
 
@@ -174,24 +192,43 @@ public class Player {
     }
 
     public void addToBattlefield(CreatureCard creature) {
+        if (creature == null) {
+            return;
+        }
+        if (battlefield.size() >= 7) {
+            return;
+        }
         battlefield.add(creature);
     }
 
     public boolean removeFromBattlefield(CreatureCard creature) {
+        if (creature == null) {
+            return false;
+        }
         return battlefield.remove(creature);
     }
 
     public boolean hasBathroomCrewOnBoard() {
+        if (battlefield == null || battlefield.isEmpty()) {
+            return false;
+        }
         boolean hasAdrian = false;
         boolean hasFabio = false;
         boolean hasFernando = false;
 
         for (CreatureCard creature : battlefield) {
-            if ("ADRIAN".equals(creature.getId())) {
+            if (creature == null) {
+                continue;
+            }
+            String id = creature.getId();
+            if (id == null) {
+                continue;
+            }
+            if ("ADRIAN".equals(id)) {
                 hasAdrian = true;
-            } else if ("FABIO".equals(creature.getId())) {
+            } else if ("FABIO".equals(id)) {
                 hasFabio = true;
-            } else if ("FERNANDO".equals(creature.getId())) {
+            } else if ("FERNANDO".equals(id)) {
                 hasFernando = true;
             }
         }

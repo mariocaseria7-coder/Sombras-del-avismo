@@ -84,6 +84,9 @@ public class Game {
     }
 
     public ActionResult startGame() {
+        if (player1 == null || player2 == null) {
+            return ActionResult.failure("Error: los jugadores no están inicializados.");
+        }
         resetPlayer(player1);
         resetPlayer(player2);
         finished = false;
@@ -105,6 +108,9 @@ public class Game {
     }
 
     public ActionResult nextTurn() {
+        if (currentPlayer == null || waitingPlayer == null) {
+            return ActionResult.failure("Error crítico: los jugadores no están inicializados.");
+        }
         if (finished) {
             return ActionResult.failure("La partida ya terminó.");
         }
@@ -129,7 +135,7 @@ public class Game {
         if (card == null) {
             return "Selecciona una carta de tu mano.";
         }
-        if (!currentPlayer.getHand().contains(card)) {
+        if (currentPlayer == null || !currentPlayer.getHand().contains(card)) {
             return "Solo puedes jugar cartas que esten en tu mano.";
         }
         if (currentPlayer.getCurrentMana() < card.getManaCost()) {
@@ -156,7 +162,7 @@ public class Game {
         if (card == null) {
             return ActionResult.failure("Selecciona una carta.");
         }
-        if (!currentPlayer.getHand().contains(card)) {
+        if (currentPlayer == null || !currentPlayer.getHand().contains(card)) {
             return ActionResult.failure("Solo puedes jugar cartas de tu mano.");
         }
         String playRestriction = explainWhyCannotPlay(card);
@@ -217,8 +223,11 @@ public class Game {
 
     public List<CreatureCard> getAvailableAttackers() {
         List<CreatureCard> attackers = new ArrayList<>();
+        if (currentPlayer == null) {
+            return attackers;
+        }
         for (CreatureCard creature : currentPlayer.getBattlefield()) {
-            if (creature.canAttack()) {
+            if (creature != null && creature.canAttack()) {
                 attackers.add(creature);
             }
         }
@@ -227,8 +236,11 @@ public class Game {
 
     public List<CreatureCard> getAvailableBlockers() {
         List<CreatureCard> blockers = new ArrayList<>();
+        if (waitingPlayer == null) {
+            return blockers;
+        }
         for (CreatureCard creature : waitingPlayer.getBattlefield()) {
-            if (creature.canDefend()) {
+            if (creature != null && creature.canDefend()) {
                 blockers.add(creature);
             }
         }
@@ -236,6 +248,9 @@ public class Game {
     }
 
     public ActionResult attackPlayer(CreatureCard attacker, CreatureCard blocker) {
+        if (attacker == null) {
+            return ActionResult.failure("Selecciona una criatura para atacar.");
+        }
         String attackRestriction = explainWhyCannotAttack(attacker);
         if (attackRestriction != null) {
             return ActionResult.failure(attackRestriction);
@@ -270,6 +285,9 @@ public class Game {
     }
 
     public ActionResult attackCreature(CreatureCard attacker, CreatureCard defender) {
+        if (attacker == null) {
+            return ActionResult.failure("Selecciona una criatura para atacar.");
+        }
         String attackRestriction = explainWhyCannotAttack(attacker);
         if (attackRestriction != null) {
             return ActionResult.failure(attackRestriction);
@@ -313,11 +331,17 @@ public class Game {
     }
 
     private ActionResult resolveSpell(SpellCard spellCard, CreatureCard target, boolean hiddenBySmoke) {
+        if (spellCard == null) {
+            return ActionResult.failure("Error: hechizo inválido.");
+        }
         String publicName = hiddenBySmoke ? "una carta oculta" : spellCard.getName();
         String privateMessage = null;
 
         switch (spellCard.getEffect()) {
             case BUFF -> {
+                if (target == null) {
+                    return ActionResult.failure("Error: objetivo inválido para el hechizo.");
+                }
                 int attackBonus = spellCard.getPrimaryValue() + spellCard.getColor().getAttackBonus();
                 int healthBonus = spellCard.getSecondaryValue();
                 if ("MARCO".equals(target.getId())) {
@@ -348,6 +372,9 @@ public class Game {
                         deadCreatures)), hiddenBySmoke ? "La carta oculta era " + spellCard.getName() + "." : null);
             }
             case SUMMON_LIN -> {
+                if (currentPlayer.getBattlefield().size() >= BOARD_LIMIT) {
+                    return ActionResult.failure("No puedes invocar a Lin porque tu tablero ya está lleno.");
+                }
                 CreatureCard lin = CardCatalog.createCreature("LIN");
                 lin.markSummoned();
                 currentPlayer.addToBattlefield(lin);
@@ -357,7 +384,13 @@ public class Game {
                         hiddenBySmoke ? "La carta oculta era " + spellCard.getName() + "." : null);
             }
             case SUMMON_MONO_A -> {
+                if (currentPlayer.getBattlefield().size() >= BOARD_LIMIT) {
+                    return ActionResult.failure("No puedes invocar más criaturas porque tu tablero ya está lleno.");
+                }
                 CreatureCard mono = CardCatalog.createCreature(spellCard.getRelatedCardId());
+                if (mono == null) {
+                    return ActionResult.failure("Error al invocar criatura: ID inválido.");
+                }
                 mono.markSummoned();
                 currentPlayer.addToBattlefield(mono);
                 return recordSuccess(
@@ -392,12 +425,20 @@ public class Game {
                                     + " pero el rival no tenia cartas."));
                 }
                 Card stolen = stealRandomCard();
+                if (stolen == null) {
+                    return recordSuccess(
+                            withManaInfo(currentPlayer.getName() + " usa " + publicName
+                                    + " pero no pudo robar ninguna carta."));
+                }
                 privateMessage = "Carta robada: " + stolen.getName() + ".";
                 return recordSuccess(
                         withManaInfo(currentPlayer.getName() + " usa " + publicName + " y roba una carta del rival."),
                         privateMessage);
             }
             case SET_ATTACK_TO_TEN -> {
+                if (target == null) {
+                    return ActionResult.failure("Error: objetivo inválido para el hechizo.");
+                }
                 int attackBefore = target.getAttack();
                 target.setAttackToAtLeast(spellCard.getPrimaryValue());
                 return recordSuccess(
@@ -435,6 +476,9 @@ public class Game {
     }
 
     private ActionResult resolveCombat(CreatureCard attacker, CreatureCard defender, String intro) {
+        if (attacker == null || defender == null) {
+            return ActionResult.failure("Error: una de las criaturas en combate es inválida.");
+        }
         int damageToDefender = dealDamageToCreature(waitingPlayer, defender, attacker.getAttack(), true);
         int damageToAttacker = dealDamageToCreature(currentPlayer, attacker, defender.getAttack(), true);
         List<String> deadCreatures = cleanupDeadCreatures();
@@ -447,12 +491,23 @@ public class Game {
     }
 
     private void applyDamageToBoard(Player player, int amount, boolean fromEnemy) {
+        if (player == null || amount <= 0) {
+            return;
+        }
         for (CreatureCard creature : new ArrayList<>(player.getBattlefield())) {
-            dealDamageToCreature(player, creature, amount, fromEnemy);
+            if (creature != null) {
+                dealDamageToCreature(player, creature, amount, fromEnemy);
+            }
         }
     }
 
     private int dealDamageToCreature(Player owner, CreatureCard creature, int damage, boolean fromEnemy) {
+        if (damage < 0) {
+            damage = 0;
+        }
+        if (creature == null || owner == null) {
+            return 0;
+        }
         if (damage <= 0) {
             return 0;
         }
@@ -471,21 +526,29 @@ public class Game {
     }
 
     private void moveDeadCreatures(Player player, List<String> deadCreatures) {
+        if (player == null || deadCreatures == null) {
+            return;
+        }
         List<CreatureCard> toRemove = new ArrayList<>();
         for (CreatureCard creature : player.getBattlefield()) {
-            if (creature.isDead()) {
+            if (creature != null && creature.isDead()) {
                 toRemove.add(creature);
             }
         }
         for (CreatureCard dead : toRemove) {
             player.removeFromBattlefield(dead);
             player.getDeck().sendToGraveyard(dead);
-            deadCreatures.add(dead.getName());
+            if (dead.getName() != null) {
+                deadCreatures.add(dead.getName());
+            }
         }
     }
 
     private Card stealRandomCard() {
         List<Card> rivalHand = new ArrayList<>(waitingPlayer.getHand());
+        if (rivalHand.isEmpty()) {
+            return null;
+        }
         Card stolen = rivalHand.get(random.nextInt(rivalHand.size()));
         waitingPlayer.removeFromHand(stolen);
         currentPlayer.addCardToHand(stolen);
@@ -493,6 +556,9 @@ public class Game {
     }
 
     private String explainSpellRestriction(SpellCard spellCard) {
+        if (spellCard == null) {
+            return "Ese hechizo es inválido.";
+        }
         if (spellCard.getEffect() == SpellEffect.BUFF || spellCard.getEffect() == SpellEffect.SET_ATTACK_TO_TEN) {
             if (currentPlayer.getBattlefield().isEmpty()) {
                 return "Ese hechizo necesita una criatura propia en el tablero.";
@@ -527,14 +593,20 @@ public class Game {
     }
 
     private ActionResult startTurn() {
+        if (currentPlayer == null || waitingPlayer == null) {
+            return ActionResult.failure("Error crítico: los jugadores no están inicializados.");
+        }
+        
         phase = "Inicio";
         currentPlayer.setAlliesProtected(false);
         currentPlayer.setRevealOpponentHand(false);
         currentPlayer.increaseMaxMana(MANA_STEP, MAX_MANA);
         currentPlayer.refillMana();
 
-        for (CreatureCard creature : currentPlayer.getBattlefield()) {
-            creature.startOwnerTurn();
+        for (CreatureCard creature : new ArrayList<>(currentPlayer.getBattlefield())) {
+            if (creature != null) {
+                creature.startOwnerTurn();
+            }
         }
 
         Card drawnCard = currentPlayer.drawCard();
@@ -579,10 +651,22 @@ public class Game {
     }
 
     private String withManaInfo(String message) {
+        if (message == null) {
+            message = "";
+        }
+        if (currentPlayer == null) {
+            return message;
+        }
         return message + " Maná restante: " + currentPlayer.getCurrentMana() + "/" + currentPlayer.getMaxMana() + ".";
     }
 
     private String describeDamage(String sourceName, String targetName, int damage) {
+        if (sourceName == null) {
+            sourceName = "Una criatura";
+        }
+        if (targetName == null) {
+            targetName = "su objetivo";
+        }
         if (damage <= 0) {
             return sourceName + " no consigue hacer daño a " + targetName + ".";
         }
@@ -590,7 +674,10 @@ public class Game {
     }
 
     private String withDeaths(String baseMessage, List<String> deadCreatures) {
-        if (deadCreatures.isEmpty()) {
+        if (baseMessage == null) {
+            baseMessage = "";
+        }
+        if (deadCreatures == null || deadCreatures.isEmpty()) {
             return baseMessage;
         }
         return baseMessage + " Mueren: " + String.join(", ", deadCreatures) + ".";

@@ -118,6 +118,8 @@ public class GameFrame extends JFrame {
     private String playerOneName;
     private String playerTwoName;
     private boolean passScreensEnabled;
+    private boolean musicEnabled;
+    private int musicVolume;
     private WindowMode windowMode;
     private Dimension preferredWindowResolution;
 
@@ -135,6 +137,8 @@ public class GameFrame extends JFrame {
         playerOneName = "Jugador 1";
         playerTwoName = "Jugador 2";
         passScreensEnabled = true;
+        musicEnabled = true;
+        musicVolume = 25;
         windowMode = maximizeOnOpen ? WindowMode.MAXIMIZED : WindowMode.WINDOWED;
         preferredWindowResolution = new Dimension(windowSize);
 
@@ -142,6 +146,11 @@ public class GameFrame extends JFrame {
         setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
         setMinimumSize(minimumWindowSize);
         setSize(windowSize);
+
+        java.net.URL iconUrl = getClass().getResource("/images/logo.png");
+        if (iconUrl != null) {
+            setIconImage(new ImageIcon(iconUrl).getImage());
+        }
 
         turnLabel = createHeaderLabel(30);
         phaseLabel = createHeaderLabel(16);
@@ -188,6 +197,9 @@ public class GameFrame extends JFrame {
         Timer loadingTimer = new Timer(900, event -> showMainMenu());
         loadingTimer.setRepeats(false);
         loadingTimer.start();
+
+        // Iniciar la música de fondo
+        com.sombrasdelavismo.util.SoundManager.playBackgroundMusic("/audio/musica.wav");
     }
 
     private enum WindowMode {
@@ -304,9 +316,27 @@ public class GameFrame extends JFrame {
     }
 
     private JPanel buildMainMenu() {
-        JPanel root = createMenuRoot();
+        JPanel root = new JPanel(new BorderLayout()) {
+            private java.awt.Image bgImage;
+            {
+                java.net.URL bgUrl = getClass().getResource("/images/fondo.png");
+                if (bgUrl != null) {
+                    bgImage = new ImageIcon(bgUrl).getImage();
+                }
+            }
+            @Override
+            protected void paintComponent(java.awt.Graphics g) {
+                super.paintComponent(g);
+                if (bgImage != null) {
+                    g.drawImage(bgImage, 0, 0, getWidth(), getHeight(), this);
+                }
+            }
+        };
+        root.setBackground(BACKGROUND);
+        root.setBorder(new EmptyBorder(scaled(26), scaled(26), scaled(26), scaled(26)));
 
         JPanel menu = createPanelShell(PANEL);
+        menu.setBackground(new Color(PANEL.getRed(), PANEL.getGreen(), PANEL.getBlue(), 220));
         menu.setLayout(new BoxLayout(menu, BoxLayout.Y_AXIS));
         menu.setPreferredSize(new Dimension(Math.max(360, scaled(520)), Math.max(430, scaled(560))));
 
@@ -331,6 +361,18 @@ public class GameFrame extends JFrame {
         });
 
         menu.add(Box.createVerticalGlue());
+
+        java.net.URL logoUrl = getClass().getResource("/images/logo.png");
+        if (logoUrl != null) {
+            java.awt.Image img = new ImageIcon(logoUrl).getImage();
+            int logoSize = scaled(180);
+            java.awt.Image scaledImg = img.getScaledInstance(logoSize, logoSize, java.awt.Image.SCALE_SMOOTH);
+            JLabel logoLabel = new JLabel(new ImageIcon(scaledImg));
+            logoLabel.setAlignmentX(Component.CENTER_ALIGNMENT);
+            menu.add(logoLabel);
+            menu.add(Box.createVerticalStrut(scaled(15)));
+        }
+
         menu.add(title);
         menu.add(Box.createVerticalStrut(scaled(8)));
         menu.add(subtitle);
@@ -463,6 +505,13 @@ public class GameFrame extends JFrame {
         ResolutionOption[] resolutionOptions = buildResolutionOptions();
         JComboBox<ResolutionOption> resolutionBox = new JComboBox<>(resolutionOptions);
         JCheckBox passScreensCheck = new JCheckBox("Pantallas de paso de turno", passScreensEnabled);
+        JCheckBox musicCheck = new JCheckBox("Música de fondo", musicEnabled);
+        javax.swing.JSlider volumeSlider = new javax.swing.JSlider(0, 100, musicVolume);
+        volumeSlider.setOpaque(false);
+        volumeSlider.setForeground(TEXT);
+        volumeSlider.setMajorTickSpacing(25);
+        volumeSlider.setPaintTicks(true);
+        volumeSlider.setPaintLabels(true);
 
         windowModeBox.setSelectedItem(windowMode);
         resolutionBox.setSelectedItem(findResolutionOption(resolutionOptions, preferredWindowResolution));
@@ -474,8 +523,10 @@ public class GameFrame extends JFrame {
         windowModeBox.setFont(new Font("SansSerif", Font.PLAIN, scaledFontSize(14)));
         resolutionBox.setFont(new Font("SansSerif", Font.PLAIN, scaledFontSize(14)));
         passScreensCheck.setFont(new Font("SansSerif", Font.PLAIN, scaledFontSize(14)));
+        musicCheck.setFont(new Font("SansSerif", Font.PLAIN, scaledFontSize(14)));
+        volumeSlider.setFont(new Font("SansSerif", Font.PLAIN, scaledFontSize(11)));
 
-        JPanel form = createSettingsForm(playerOneField, playerTwoField, windowModeBox, resolutionBox, passScreensCheck);
+        JPanel form = createSettingsForm(playerOneField, playerTwoField, windowModeBox, resolutionBox, passScreensCheck, musicCheck, volumeSlider);
         int option = JOptionPane.showConfirmDialog(this, form, "Ajustes", JOptionPane.OK_CANCEL_OPTION, JOptionPane.PLAIN_MESSAGE);
         if (option != JOptionPane.OK_OPTION) {
             return;
@@ -484,8 +535,17 @@ public class GameFrame extends JFrame {
         playerOneName = safePlayerName(playerOneField.getText(), "Jugador 1");
         playerTwoName = safePlayerName(playerTwoField.getText(), "Jugador 2");
         passScreensEnabled = passScreensCheck.isSelected();
+        musicEnabled = musicCheck.isSelected();
+        musicVolume = volumeSlider.getValue();
         ResolutionOption selectedResolution = (ResolutionOption) resolutionBox.getSelectedItem();
         applyDisplayMode((WindowMode) windowModeBox.getSelectedItem(), selectedResolution.toDimension());
+        
+        com.sombrasdelavismo.util.SoundManager.setVolume(musicVolume);
+        if (musicEnabled) {
+            com.sombrasdelavismo.util.SoundManager.playBackgroundMusic("/audio/musica.wav");
+        } else {
+            com.sombrasdelavismo.util.SoundManager.stopBackgroundMusic();
+        }
     }
 
     private JPanel createSettingsForm(
@@ -493,7 +553,9 @@ public class GameFrame extends JFrame {
             JTextField playerTwoField,
             JComboBox<WindowMode> windowModeBox,
             JComboBox<ResolutionOption> resolutionBox,
-            JCheckBox passScreensCheck) {
+            JCheckBox passScreensCheck,
+            JCheckBox musicCheck,
+            javax.swing.JSlider volumeSlider) {
         JPanel form = new JPanel();
         form.setLayout(new BoxLayout(form, BoxLayout.Y_AXIS));
         form.setBackground(PANEL);
@@ -514,6 +576,13 @@ public class GameFrame extends JFrame {
         passScreensCheck.setOpaque(false);
         passScreensCheck.setForeground(TEXT);
         form.add(passScreensCheck);
+        form.add(Box.createVerticalStrut(scaled(6)));
+        musicCheck.setOpaque(false);
+        musicCheck.setForeground(TEXT);
+        form.add(musicCheck);
+        form.add(Box.createVerticalStrut(scaled(10)));
+        form.add(createDialogLabel("Volumen de música"));
+        form.add(volumeSlider);
         return form;
     }
 
@@ -1093,6 +1162,109 @@ public class GameFrame extends JFrame {
         return confirmed[0];
     }
 
+    private void showGameOverDialog() {
+        if (game == null) {
+            return;
+        }
+
+        JDialog gameOverDialog = new JDialog(this, "Partida terminada", true);
+        gameOverDialog.setUndecorated(true);
+        gameOverDialog.setContentPane(buildGameOverDialog(gameOverDialog));
+        gameOverDialog.pack();
+        gameOverDialog.setResizable(false);
+        gameOverDialog.setLocationRelativeTo(this);
+        gameOverDialog.setVisible(true);
+    }
+
+    private JPanel buildGameOverDialog(JDialog gameOverDialog) {
+        Player winner = game.getWinner();
+        Player player1 = game.getPlayer1();
+        Player player2 = game.getPlayer2();
+        String winnerName = winner == null ? "Sin ganador" : winner.getName();
+
+        JPanel shell = new JPanel(new BorderLayout(0, scaled(16)));
+        shell.setBackground(PANEL);
+        shell.setBorder(BorderFactory.createCompoundBorder(
+                BorderFactory.createLineBorder(new Color(255, 255, 255, 28)),
+                new EmptyBorder(scaled(22), scaled(24), scaled(22), scaled(24))));
+        shell.setPreferredSize(new Dimension(Math.max(400, scaled(520)), Math.max(360, scaled(440))));
+
+        JPanel header = new JPanel();
+        header.setOpaque(false);
+        header.setLayout(new BoxLayout(header, BoxLayout.Y_AXIS));
+
+        JLabel title = createMenuTitle("Partida terminada", 30);
+        JLabel winnerLabel = createMenuTitle(winnerName, 40);
+        JLabel subtitle = createMenuText("se lleva la victoria");
+        title.setAlignmentX(Component.CENTER_ALIGNMENT);
+        winnerLabel.setAlignmentX(Component.CENTER_ALIGNMENT);
+        subtitle.setAlignmentX(Component.CENTER_ALIGNMENT);
+
+        header.add(title);
+        header.add(Box.createVerticalStrut(scaled(10)));
+        header.add(winnerLabel);
+        header.add(Box.createVerticalStrut(scaled(4)));
+        header.add(subtitle);
+
+        JPanel scorePanel = new JPanel(new GridLayout(1, 2, scaled(10), 0));
+        scorePanel.setOpaque(false);
+        scorePanel.add(createGameOverStatTile(
+                player1.getName(),
+                "Vida " + player1.getLife() + "  |  Mano " + player1.getHand().size()));
+        scorePanel.add(createGameOverStatTile(
+                player2.getName(),
+                "Vida " + player2.getLife() + "  |  Mano " + player2.getHand().size()));
+
+        JPanel buttons = new JPanel(new GridLayout(1, 2, scaled(10), 0));
+        buttons.setOpaque(false);
+        JButton rematchButton = createPauseButton("Revancha", BUTTON);
+        JButton mainMenuButton = createPauseButton("Menú principal", BUTTON_DANGER);
+
+        rematchButton.addActionListener(event -> {
+            gameOverDialog.dispose();
+            restartCurrentGame();
+        });
+        mainMenuButton.addActionListener(event -> {
+            gameOverDialog.dispose();
+            game = null;
+            showMainMenu();
+        });
+
+        buttons.add(rematchButton);
+        buttons.add(mainMenuButton);
+
+        JPanel center = new JPanel();
+        center.setOpaque(false);
+        center.setLayout(new BoxLayout(center, BoxLayout.Y_AXIS));
+        center.add(scorePanel);
+        center.add(Box.createVerticalGlue());
+
+        shell.add(header, BorderLayout.NORTH);
+        shell.add(center, BorderLayout.CENTER);
+        shell.add(buttons, BorderLayout.SOUTH);
+        return shell;
+    }
+
+    private JPanel createGameOverStatTile(String title, String value) {
+        JPanel tile = new JPanel(new BorderLayout(0, scaled(4)));
+        tile.setBackground(PANEL_SOFT);
+        tile.setBorder(BorderFactory.createCompoundBorder(
+                BorderFactory.createLineBorder(new Color(255, 255, 255, 12)),
+                new EmptyBorder(scaled(12), scaled(12), scaled(12), scaled(12))));
+
+        JLabel titleLabel = new JLabel(title, SwingConstants.CENTER);
+        titleLabel.setForeground(TEXT);
+        titleLabel.setFont(new Font("SansSerif", Font.BOLD, scaledFontSize(16)));
+
+        JLabel valueLabel = new JLabel(value, SwingConstants.CENTER);
+        valueLabel.setForeground(MUTED_TEXT);
+        valueLabel.setFont(new Font("SansSerif", Font.PLAIN, scaledFontSize(13)));
+
+        tile.add(titleLabel, BorderLayout.CENTER);
+        tile.add(valueLabel, BorderLayout.SOUTH);
+        return tile;
+    }
+
     private boolean showPlayerSetupDialog() {
         JTextField playerOneField = new JTextField(playerOneName, 18);
         JTextField playerTwoField = new JTextField(playerTwoName, 18);
@@ -1132,6 +1304,10 @@ public class GameFrame extends JFrame {
     }
 
     private void handlePlayCard() {
+        if (game == null) {
+            showInfo("Error: la partida no está inicializada.");
+            return;
+        }
         if (selectedHandCard == null) {
             showInfo("Selecciona primero una carta de tu mano.");
             return;
@@ -1150,6 +1326,10 @@ public class GameFrame extends JFrame {
     }
 
     private void handleAttackPlayer() {
+        if (game == null) {
+            showInfo("Error: la partida no está inicializada.");
+            return;
+        }
         if (selectedAttacker == null) {
             showInfo("Selecciona una criatura de tu tablero para atacar.");
             return;
@@ -1157,7 +1337,7 @@ public class GameFrame extends JFrame {
 
         CreatureCard blocker = null;
         List<CreatureCard> blockers = game.getAvailableBlockers();
-        if (!blockers.isEmpty()) {
+        if (blockers != null && !blockers.isEmpty()) {
             showPassScreen("El rival puede decidir si quiere bloquear este ataque.");
             blocker = chooseBlocker(blockers);
             if (blocker == BLOCKER_CANCELLED) {
@@ -1173,6 +1353,10 @@ public class GameFrame extends JFrame {
     }
 
     private void handleAttackCreature() {
+        if (game == null) {
+            showInfo("Error: la partida no está inicializada.");
+            return;
+        }
         if (selectedAttacker == null) {
             showInfo("Selecciona una criatura atacante de tu tablero.");
             return;
@@ -1187,6 +1371,10 @@ public class GameFrame extends JFrame {
     }
 
     private void handleEndTurn() {
+        if (game == null) {
+            showInfo("Error: la partida no está inicializada.");
+            return;
+        }
         ActionResult result = game.nextTurn();
         if (!result.successful()) {
             showInfo(result.publicMessage());
@@ -1234,7 +1422,7 @@ public class GameFrame extends JFrame {
         refreshUi();
 
         if (game.isFinished()) {
-            showInfo("Partida terminada.\n\nGanador: " + game.getWinner().getName());
+            showGameOverDialog();
         }
     }
 

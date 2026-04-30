@@ -153,7 +153,9 @@ public final class ImageUtils {
         aliases.add(String.join("_", cleanTokens));
         aliases.add(String.join("", cleanTokens));
         aliases.add(cleanTokens.get(0));
-        aliases.add(cleanTokens.get(cleanTokens.size() - 1));
+        if (cleanTokens.size() > 1) {
+            aliases.add(cleanTokens.get(cleanTokens.size() - 1));
+        }
 
         List<String> filteredTokens = cleanTokens.stream()
                 .filter(token -> !ARTICLE_TOKENS.contains(token))
@@ -162,7 +164,9 @@ public final class ImageUtils {
             aliases.add(String.join("_", filteredTokens));
             aliases.add(String.join("", filteredTokens));
             aliases.add(filteredTokens.get(0));
-            aliases.add(filteredTokens.get(filteredTokens.size() - 1));
+            if (filteredTokens.size() > 1) {
+                aliases.add(filteredTokens.get(filteredTokens.size() - 1));
+            }
         }
     }
 

@@ -35,6 +35,9 @@ public final class CardCatalog {
     public static List<Card> createAlbumCards() {
         List<Card> cards = new ArrayList<>();
         for (Card card : PROTOTYPES.values()) {
+            if ("MONO_A_TOKEN".equals(card.getId())) {
+                continue; // Ocultar ficha del album
+            }
             cards.add(card.copy());
         }
         return cards;

@@ -141,14 +141,17 @@ public class CreatureCard extends Card {
     }
 
     public int receiveDamage(int rawDamage) {
+        if (rawDamage < 0) {
+            return 0;
+        }
         int appliedDamage = slippery ? Math.max(0, rawDamage - 2) : rawDamage;
         health = Math.max(0, health - appliedDamage);
         return appliedDamage;
     }
 
     public void addStats(int attackBonus, int healthBonus) {
-        this.attack += attackBonus;
-        this.health += healthBonus;
+        this.attack = Math.max(0, attack + attackBonus);
+        this.health = Math.max(1, health + healthBonus);
     }
 
     public void setAttackToAtLeast(int targetAttack) {
